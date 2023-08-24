@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 '''
 Contains the method that calculates the accuracy 
