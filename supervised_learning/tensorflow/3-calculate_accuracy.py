@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 '''
-Contains the method that calculates the accuracy 
-of a prediction
+calculates the accuracy of a prediction
 '''
 import tensorflow.compat.v1 as tf
 
