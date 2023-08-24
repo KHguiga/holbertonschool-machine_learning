@@ -1,1 +1,2 @@
-# Classification
+# Supervised
+Supervised Learning
