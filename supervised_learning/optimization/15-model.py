@@ -23,27 +23,27 @@ def create_layer(prev, n, activation):
     return layer(prev)
 
 
-def create_batch_norm_layer(prev, n, activation):
-    '''Function thar normalizes'''
-    activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
-    layer = tf.layers.Dense(units=n, kernel_initializer=activa)
-    Z = layer(prev)
-    mu, sigma_2 = tf.nn.moments(Z, axes=[0])
-    epsilon = 1e-8
-    gamma = tf.Variable(initial_value=tf.constant(1.0, shape=[n]),
-                        name='gamma', trainable=True)
-    beta = tf.Variable(initial_value=tf.constant(0.0, shape=[n]),
-                       name='beta', trainable=True)
-    Z_b_norm = tf.nn.batch_normalization(
-        Z,
-        mu,
-        sigma_2,
-        beta,
-        gamma,
-        epsilon)
-    if activation is None:
-        return Z
-    return activation(Z_b_norm)
+# def create_batch_norm_layer(prev, n, activation):
+#     '''Function thar normalizes'''
+#     activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
+#     layer = tf.layers.Dense(units=n, kernel_initializer=activa)
+#     Z = layer(prev)
+#     mu, sigma_2 = tf.nn.moments(Z, axes=[0])
+#     epsilon = 1e-8
+#     gamma = tf.Variable(initial_value=tf.constant(1.0, shape=[n]),
+#                         name='gamma', trainable=True)
+#     beta = tf.Variable(initial_value=tf.constant(0.0, shape=[n]),
+#                        name='beta', trainable=True)
+#     Z_b_norm = tf.nn.batch_normalization(
+#         Z,
+#         mu,
+#         sigma_2,
+#         beta,
+#         gamma,
+#         epsilon)
+#     if activation is None:
+#         return Z
+#     return activation(Z_b_norm)
 
 
 def learning_rate_decay(alpha, decay_rate, global_step, decay_step):
@@ -58,17 +58,37 @@ def create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step):
     adam = tf.train.AdamOptimizer(alpha, beta1, beta2, epsilon)
     return adam.minimize(loss, global_step=global_step)
 
-
-def forward_prop(prev, layers=[], activations=[]):
-    '''Function that makes forward propagation'''
-    estimation = create_batch_norm_layer(prev, layers[0], activations[0])
-    for i in range(1, len(layers)):
-        if i != len(layers) - 1:
-            estimation = create_batch_norm_layer(estimation, layers[i],
-                                                 activations[i])
-        else:
-            estimation = create_layer(estimation, layers[i], activations[i])
-    return estimation
+def create_batch_norm_layer(prev, n, activation):
+    """
+    apply the activation function to the normalized inputs
+    """
+    z = create_layer(prev, n, activation)
+    if activation is None:
+        return z
+    else:
+        mean, variance = tf.nn.moments(z, axes=[0])
+        gamma = tf.Variable(1., trainable=True)
+        beta = tf.Variable(0., trainable=True)
+        epsilon = 1e-8
+        z_norm = tf.nn.batch_normalization(
+            z, mean, variance, beta, gamma, epsilon)
+    return activation(z_norm)
+def forward_prop(prev, layers, activations, epsilon):
+    #all layers get batch_normalization but the last one, that stays without any activation or normalization
+    for i, n in enumerate(layers[:-1]):
+        prev = create_batch_norm_layer(prev, n, activations[i])
+    prev = create_layer(prev, layers[-1],activations[-1])
+    return prev
+# def forward_prop(prev, layers=[], activations=[]):
+#     '''Function that makes forward propagation'''
+#     estimation = create_batch_norm_layer(prev, layers[0], activations[0])
+#     for i in range(1, len(layers)):
+#         if i != len(layers) - 1:
+#             estimation = create_batch_norm_layer(estimation, layers[i],
+#                                                  activations[i])
+#         else:
+#             estimation = create_layer(estimation, layers[i], activations[i])
+#     return estimation
 
 
 def calculate_accuracy(y, y_pred):
