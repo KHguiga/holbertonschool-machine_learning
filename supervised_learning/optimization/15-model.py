@@ -132,7 +132,7 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
 
     global_step = tf.Variable(0, trainable=False)
 
-    decay_steps = (m // batch_size) - 1
+    decay_steps = m // batch_size
     if m % batch_size:
         decay_steps += 1
 
@@ -165,10 +165,10 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
                 Y_batch = Y_shuffle[j:j + batch_size]
                 sess.run(train_op, feed_dict={x:X_batch, 
                                               y:Y_batch})
-                if not ((j // batch_size + 1) % 100):
+                if not ((j + 1 // batch_size) % 100):
                     cost, acc = sess.run((loss, accuracy), feed_dict={x:X_batch, 
                                                                       y:Y_batch})
-                    print('\tStep {}:'.format(j // batch_size + 1))
+                    print('\tStep {}:'.format(j + 1 // batch_size))
                     print('\t\tCost: {}'.format(cost))
                     print('\t\tAccuracy: {}'.format(acc))
 
