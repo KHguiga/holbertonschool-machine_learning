@@ -3,27 +3,61 @@
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-def shuffle_data(X, Y):
-    p = np.random.permutation(X.shape[0])
-    return X[p], Y[p]
+def create_layer(prev, n, activation):
+    '''Function that creates a layer'''
+    activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
+    layer = tf.layers.Dense(units=n, activation=activation,
+                            kernel_initializer=activa, name='layer')
+    return layer(prev)
 
-def forward_prop(x, layers, activations, epsilon):
-    prev = x
-    for i, n in enumerate(layers):
-        dense = tf.layers.Dense(n, kernel_initializer=tf.contrib.layers.variance_scaling_initializer(mode="FAN_AVG"), name='dense')
-        z = dense(prev)
-        if i < len(layers) - 1:
-            gamma = tf.Variable(tf.constant(1.0, shape=[n]), name='gamma',
-                                trainable=True)
-            beta = tf.Variable(tf.constant(0.0, shape=[n]), name='beta',
-                               trainable=True)
-            m, v = tf.nn.moments(z, axes=0)
-            z_norm = tf.nn.batch_normalization(z, m, v, beta, gamma, epsilon)
-            activation = activations[i]
-            prev = activation(z_norm)
-        else:
-            prev = z
+def create_batch_norm_layer(prev, n, activation):
+    """
+    apply the activation function to the normalized inputs
+    """
+    z = create_layer(prev, n, activation)
+    if activation is None:
+        return z
+    else:
+        mean, variance = tf.nn.moments(z, axes=[0])
+        gamma = tf.Variable(1., trainable=True)
+        beta = tf.Variable(0., trainable=True)
+        epsilon = 1e-8
+        z_norm = tf.nn.batch_normalization(
+            z, mean, variance, beta, gamma, epsilon)
+    return activation(z_norm)
+def forward_prop(prev, layers, activations, epsilon):
+    #all layers get batch_normalization but the last one, that stays without any activation or normalization
+    for i, n in enumerate(layers[:-1]):
+        prev = create_batch_norm_layer(prev, n, activations[i])
+    prev = create_layer(prev, layers[-1],activations[-1])
     return prev
+
+def shuffle_data(X, Y):
+    dataset_len = X.shape[0]
+    indices_permutted = np.random.permutation(dataset_len)
+    return X[indices_permutted], Y[indices_permutted]
+
+def create_momentum_op(loss, alpha, beta1):
+    optimizer = tf.train.MomentumOptimizer(alpha, beta1)
+    return optimizer.minimize(loss)
+
+def create_RMSProp_op(loss, alpha, beta2, epsilon):
+    op = tf.train.RMSPropOptimizer(alpha, beta2, epsilon=epsilon)
+    return op.minimize(loss)
+
+def create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step):
+    optimizer = tf.train.AdamOptimizer(alpha, beta1, beta2, epsilon)
+    return optimizer.minimize(loss, global_step=global_step)
+
+def learning_rate_decay(alpha, decay_rate, global_step, decay_steps):
+    return tf.train.inverse_time_decay(alpha, global_step, decay_steps, decay_rate, staircase=True)
+
+def calculate_accuracy(y, y_pred):
+    correct = tf.equal(tf.argmax(y, 1), tf.argmax(y_pred, 1))
+    return tf.reduce_mean(tf.cast(correct, tf.float32))
+
+def calculate_loss(y, y_pred):
+    return tf.losses.softmax_cross_entropy(y, y_pred)
 
 def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
           beta2=0.999, epsilon=1e-8, decay_rate=1, batch_size=32, epochs=5,
@@ -42,22 +76,21 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
     y_pred = forward_prop(x, layers, activations, epsilon)
     tf.add_to_collection('y_pred', y_pred)
 
-    loss = tf.losses.softmax_cross_entropy(y, y_pred)
+    loss = calculate_loss(y, y_pred)
     tf.add_to_collection('loss', loss)
 
-    correct = tf.equal(tf.argmax(y, 1), tf.argmax(y_pred, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
+    accuracy = calculate_accuracy(y, y_pred)
     tf.add_to_collection('accuracy', accuracy)
 
     global_step = tf.Variable(0, trainable=False)
+    
     decay_steps = m // batch_size
     if m % batch_size:
         decay_steps += 1
 
-    alpha = tf.train.inverse_time_decay(alpha, global_step, decay_steps,
-                                        decay_rate, staircase=True)
-    optimizer = tf.train.AdamOptimizer(alpha, beta1, beta2, epsilon)
-    train_op = optimizer.minimize(loss, global_step=global_step)
+    alpha = learning_rate_decay(alpha, decay_rate, global_step, decay_steps)
+    
+    train_op = create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step)
     tf.add_to_collection('train_op', train_op)
 
     init = tf.global_variables_initializer()
@@ -65,35 +98,41 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
         sess.run(init)
         
         for i in range(epochs):
-            print('After {} epochs:'.format(i))
+            
             train_cost, train_accuracy = sess.run((loss, accuracy),
                                                   feed_dict={x:X_train,
                                                              y:Y_train})
-            print('\tTraining Cost: {}'.format(train_cost))
-            print('\tTraining Accuracy: {}'.format(train_accuracy))
             valid_cost, valid_accuracy = sess.run((loss, accuracy),
                                                   feed_dict={x:X_valid,
                                                              y:Y_valid})
+            print('After {} epochs:'.format(i))
+            print('\tTraining Cost: {}'.format(train_cost))
+            print('\tTraining Accuracy: {}'.format(train_accuracy))
             print('\tValidation Cost: {}'.format(valid_cost))
             print('\tValidation Accuracy: {}'.format(valid_accuracy))
+            
             X_shuffle, Y_shuffle = shuffle_data(X_train, Y_train)
             for j in range(0, X_train.shape[0], batch_size):
                 X_batch = X_shuffle[j:j + batch_size]
                 Y_batch = Y_shuffle[j:j + batch_size]
-                sess.run(train_op, feed_dict={x:X_batch, y:Y_batch})
+                sess.run(train_op, feed_dict={x:X_batch, 
+                                              y:Y_batch})
                 if not ((j // batch_size + 1) % 100):
-                    cost, acc = sess.run((loss, accuracy), feed_dict={x:X_batch, y:Y_batch})
+                    cost, acc = sess.run((loss, accuracy), feed_dict={x:X_batch, 
+                                                                      y:Y_batch})
                     print('\tStep {}:'.format(j // batch_size + 1))
                     print('\t\tCost: {}'.format(cost))
                     print('\t\tAccuracy: {}'.format(acc))
 
-        print('After {} epochs:'.format(epochs))
         train_cost, train_accuracy = sess.run((loss, accuracy),
-                                              feed_dict={x:X_train, y:Y_train})
+                                              feed_dict={x:X_train,
+                                                         y:Y_train})
+        valid_cost, valid_accuracy = sess.run((loss, accuracy),
+                                              feed_dict={x:X_valid,
+                                                         y:Y_valid})
+        print('After {} epochs:'.format(epochs))
         print('\tTraining Cost: {}'.format(train_cost))
         print('\tTraining Accuracy: {}'.format(train_accuracy))
-        valid_cost, valid_accuracy = sess.run((loss, accuracy),
-                                              feed_dict={x:X_valid, y:Y_valid})
         print('\tValidation Cost: {}'.format(valid_cost))
         print('\tValidation Accuracy: {}'.format(valid_accuracy))
 
