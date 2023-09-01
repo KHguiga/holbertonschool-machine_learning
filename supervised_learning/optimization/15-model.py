@@ -166,8 +166,8 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
                 sess.run(train_op, feed_dict={x:X_batch, 
                                               y:Y_batch})
                 if not ((j // batch_size + 1) % 100):
-                    print('X_batch: ',X_batch)
-                    print('Y_batch: ',Y_batch)
+                    # print('X_batch: ',X_batch)
+                    # print('Y_batch: ',Y_batch)
                     cost, acc = sess.run((loss, accuracy), feed_dict={x:X_batch, 
                                                                       y:Y_batch})
                     print('\tStep {}:'.format(j // batch_size + 1))
