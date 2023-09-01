@@ -165,12 +165,12 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
                 Y_batch = Y_shuffle[j:j + batch_size]
                 sess.run(train_op, feed_dict={x:X_batch, 
                                               y:Y_batch})
-                if not ((j // batch_size + 1) % 100):
+                if (j + 1) % 100 == 0 and j != 0:
                     # print('X_batch: ',X_batch)
                     # print('Y_batch: ',Y_batch)
                     cost, acc = sess.run((loss, accuracy), feed_dict={x:X_batch, 
                                                                       y:Y_batch})
-                    print('\tStep {}:'.format(j // batch_size + 1))
+                    print('\tStep {}:'.format(j // j + 1))
                     print('\t\tCost: {}'.format(cost))
                     print('\t\tAccuracy: {}'.format(acc))
 
