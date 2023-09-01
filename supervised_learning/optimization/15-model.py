@@ -53,10 +53,10 @@ def learning_rate_decay(alpha, decay_rate, global_step, decay_step):
     return learning
 
 
-def create_Adam_op(loss, alpha, beta1, beta2, epsilon):
+def create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step):
     '''Fucntion that calculates Adam'''
     adam = tf.train.AdamOptimizer(alpha, beta1, beta2, epsilon)
-    return adam.minimize(loss)
+    return adam.minimize(loss, global_step=global_step)
 
 
 def forward_prop(prev, layers=[], activations=[]):
@@ -103,8 +103,11 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
     loss = calculate_loss(y, y_pred)
     tf.add_to_collection("loss", loss)
     global_step = tf.Variable(0, trainable=False)
-    alpha_d = learning_rate_decay(alpha, decay_rate, global_step, 1)
-    train_op = create_Adam_op(loss, alpha_d, beta1, beta2, epsilon)
+    decay_steps = m // batch_size
+    if m % batch_size:
+        decay_steps += 1
+    alpha_d = learning_rate_decay(alpha, decay_rate, global_step, decay_steps)
+    train_op = create_Adam_op(loss, alpha_d, beta1, beta2, epsilon, global_step)
     tf.add_to_collection("train_op", train_op)
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
