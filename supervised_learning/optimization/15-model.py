@@ -42,7 +42,7 @@ def create_batch_norm_layer(prev, n, activation):
         gamma,
         epsilon)
     if activation is None:
-        return Z_b_norm
+        return Z
     return activation(Z_b_norm)
 
 
