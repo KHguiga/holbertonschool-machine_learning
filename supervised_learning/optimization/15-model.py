@@ -73,7 +73,8 @@ def create_batch_norm_layer(prev, n, activation):
         z_norm = tf.nn.batch_normalization(
             z, mean, variance, beta, gamma, epsilon)
     return activation(z_norm)
-def forward_prop(prev, layers, activations, epsilon):
+
+def forward_prop(prev, layers, activations):
     #all layers get batch_normalization but the last one, that stays without any activation or normalization
     for i, n in enumerate(layers[:-1]):
         prev = create_batch_norm_layer(prev, n, activations[i])
