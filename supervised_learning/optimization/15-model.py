@@ -18,7 +18,7 @@ def shuffle_data(X, Y):
 def create_layer(prev, n, activation):
     '''Function that creates a layer'''
     activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
-    layer = tf.layers.Dense(units=n, activation=activation,
+    layer = tf.layers.Dense(units=n,
                             kernel_initializer=activa, name='layer')
     return layer(prev)
 
