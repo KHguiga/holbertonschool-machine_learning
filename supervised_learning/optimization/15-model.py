@@ -14,38 +14,6 @@ def shuffle_data(X, Y):
     y = Y[shuf_vect, :]
     return x, y
 
-
-def create_layer(prev, n, activation):
-    '''Function that creates a layer'''
-    activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
-    layer = tf.layers.Dense(units=n,
-                            kernel_initializer=activa, name='layer')
-    return layer(prev)
-
-
-# def create_batch_norm_layer(prev, n, activation):
-#     '''Function thar normalizes'''
-#     activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
-#     layer = tf.layers.Dense(units=n, kernel_initializer=activa)
-#     Z = layer(prev)
-#     mu, sigma_2 = tf.nn.moments(Z, axes=[0])
-#     epsilon = 1e-8
-#     gamma = tf.Variable(initial_value=tf.constant(1.0, shape=[n]),
-#                         name='gamma', trainable=True)
-#     beta = tf.Variable(initial_value=tf.constant(0.0, shape=[n]),
-#                        name='beta', trainable=True)
-#     Z_b_norm = tf.nn.batch_normalization(
-#         Z,
-#         mu,
-#         sigma_2,
-#         beta,
-#         gamma,
-#         epsilon)
-#     if activation is None:
-#         return Z
-#     return activation(Z_b_norm)
-
-
 def learning_rate_decay(alpha, decay_rate, global_step, decay_step):
     '''Function that calculates learning rate decay'''
     learning = tf.train.inverse_time_decay(alpha, global_step, decay_step,
@@ -57,6 +25,13 @@ def create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step):
     '''Fucntion that calculates Adam'''
     adam = tf.train.AdamOptimizer(alpha, beta1, beta2, epsilon)
     return adam.minimize(loss, global_step=global_step)
+
+def create_layer(prev, n, activation):
+    '''Function that creates a layer'''
+    activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
+    layer = tf.layers.Dense(units=n,
+                            kernel_initializer=activa, name='layer')
+    return layer(prev)
 
 def create_batch_norm_layer(prev, n, activation):
     """
@@ -78,7 +53,11 @@ def create_batch_norm_layer(prev, n, activation):
 
 def forward_prop(prev, layers, activations):
     #all layers get batch_normalization but the last one, that stays without any activation or normalization
-    for i, n in enumerate(layers[:-1]):
+    activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
+    layer = tf.layers.Dense(units=layers[0], activation=activations[0]
+                            kernel_initializer=activa, name='layer')
+    prev = layer(prev)
+    for i, n in enumerate(layers[1:-1]):
         prev = create_batch_norm_layer(prev, n, activations[i])
     prev = create_layer(prev, layers[-1],activations[-1])
     return prev
