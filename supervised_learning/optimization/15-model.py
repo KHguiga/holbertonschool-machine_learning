@@ -54,7 +54,7 @@ def create_batch_norm_layer(prev, n, activation):
 def forward_prop(prev, layers, activations):
     #all layers get batch_normalization but the last one, that stays without any activation or normalization
     activa = tf.keras.initializers.VarianceScaling(mode='fan_avg')
-    layer = tf.layers.Dense(units=layers[0], activation=activations[0]
+    layer = tf.layers.Dense(units=layers[0], activation=activations[0],
                             kernel_initializer=activa, name='layer')
     prev = layer(prev)
     for i, n in enumerate(layers[1:-1]):
