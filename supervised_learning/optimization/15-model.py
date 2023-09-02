@@ -118,17 +118,13 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
 
     x = tf.placeholder(tf.float32, shape=[None, nx], name='x')
     y = tf.placeholder(tf.float32, shape=[None, classes], name='y')
-    tf.add_to_collection('x', x)
-    tf.add_to_collection('y', y)
+    
 
     y_pred = forward_prop(x, layers, activations)
-    tf.add_to_collection('y_pred', y_pred)
 
     loss = calculate_loss(y, y_pred)
-    tf.add_to_collection('loss', loss)
 
     accuracy = calculate_accuracy(y, y_pred)
-    tf.add_to_collection('accuracy', accuracy)
 
     global_step = tf.Variable(0, trainable=False)
 
@@ -139,9 +135,17 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
     alpha = learning_rate_decay(alpha, decay_rate, global_step, decay_steps)
 
     train_op = create_Adam_op(loss, alpha, beta1, beta2, epsilon, global_step)
+
+    tf.add_to_collection('x', x)
+    tf.add_to_collection('y', y)
+    tf.add_to_collection("y_pred", y_pred)
+    tf.add_to_collection("loss", loss)
+    tf.add_to_collection("accuracy", accuracy)
     tf.add_to_collection('train_op', train_op)
 
+    saver = tf.train.Saver()
     init = tf.global_variables_initializer()
+    
     with tf.Session() as sess:
         sess.run(init)
 
@@ -186,5 +190,5 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
         print('\tValidation Cost: {}'.format(valid_cost))
         print('\tValidation Accuracy: {}'.format(valid_accuracy))
 
-        saver = tf.train.Saver()
-        return saver.save(sess, save_path)
+        save_path = saver.save(sess, save_path)
+    return save_path
