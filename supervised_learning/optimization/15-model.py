@@ -92,9 +92,9 @@ def model(Data_train, Data_valid, layers, activations, alpha=0.001, beta1=0.9,
 
     global_step = tf.Variable(0, trainable=False)
 
-    decay_steps = m // batch_size
-    if m % batch_size:
-        decay_steps += 1
+    decay_steps = m // batch_size * epochs
+    # if m % batch_size:
+    #     decay_steps += 1
 
     alpha = learning_rate_decay(alpha, decay_rate, global_step, decay_steps)
 
