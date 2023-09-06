@@ -20,18 +20,18 @@ def random_init_centroids(points,K):
 def K_means( points , k, n_iter=100, n_init=100, seed=0):
     inert= 1.
     np.random.seed(seed)
-    inertias=[]
-    iterations_needed = 0
+    inertias= []
+    iterations_needed = []
     for i in range(n_init):
         gen_0 = random_init_centroids(points,k)
         d = K_means_with_given_gen_0(points, gen_0, n_iter)
         inertias.append(d['inertia'])
-        iterations_needed += d['iterations needed']
+        iterations_needed.append(d['iterations needed'])
         if d['inertia'] < inert or i == 0 :
             inert = d['inertia']
             best_k = d
     inertias = np.array(inertias)
     best_k['mean inertia'] = np.mean(inertias)
     best_k['standard deviation inertias'] = np.std(inertias)
-    best_k['mean iterations needed'] = np.mean(inertias)
+    best_k['mean iterations needed'] = np.mean(iterations_needed)
     return best_k
