@@ -9,6 +9,7 @@ def inertia(points, centroids, clustering):
     inertia = 0
     for i in range(k):
         cluster_points = points[clustering == i]
-        cluster_variance = np.sum(squared_dists(cluster_points, np.array([centroids[i]]))) 
+        cluster_variance = np.sum(squared_dists(cluster_points, 
+                                                np.array([centroids[i]]))) 
         inertia += cluster_variance
     return inertia / points.shape[0]
