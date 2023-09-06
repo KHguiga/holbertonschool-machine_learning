@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-kmeans = __import__('0-clustering').squared_dists
+squared_dists = __import__('0-clustering').squared_dists
 
 
 def inertia(points, centroids, clustering):
