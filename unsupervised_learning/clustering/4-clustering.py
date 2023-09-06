@@ -19,5 +19,5 @@ def K_means_with_given_gen_0(points , gen_0_centroids, n_iter=100):
             break
         inertias += inert
         centroids = new_centroids
-    # return {'centroids': centroids, 'clustering': clustering, 'inertia': inert, 'iterations needed': i}
-    return {'centroids': centroids, 'clustering': clustering, 'inertia': inert}
+    return {'centroids': centroids, 'clustering': clustering, 'inertia': inert, 'iterations needed': i}
+    # return {'centroids': centroids, 'clustering': clustering, 'inertia': inert}
