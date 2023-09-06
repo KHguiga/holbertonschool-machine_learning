@@ -17,13 +17,13 @@ def random_init_centroids(points,K):
     P += mi
     return P
 
-def K_means( points , k, n_iter_max=100, n_init=100, seed=0):
+def K_means( points , k, n_iter=100, n_init=100, seed=0):
     inert= 1.
     np.random.seed(seed)
     inertias=[]
     for i in range(n_init):
         gen_0 = random_init_centroids(points,k)
-        d = K_means_with_given_gen_0(points, gen_0, n_iter_max)
+        d = K_means_with_given_gen_0(points, gen_0, n_iter)
         inertias.append(d['inertia'])
         if d['inertia'] < inert or i == 0 :
             inert = d['inertia']
