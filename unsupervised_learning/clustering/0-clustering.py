@@ -8,4 +8,4 @@ def squared_dists(A, B):
     A_dots = (A * A).sum(axis = 1).reshape((M, 1)) * np.ones(shape=(1, N))
     B_dots = (B * B).sum(axis = 1) * np.ones(shape = (M, 1))
     dist = A_dots + B_dots - 2 * np.matmul(A, B.T)
-    return dist
+    return dist.astype(int)
