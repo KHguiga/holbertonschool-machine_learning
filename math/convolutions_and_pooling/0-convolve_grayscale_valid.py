@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+from math import ceil, floor
 
 def convolve_grayscale_valid(images, kernel):
     m, h, w = images.shape
