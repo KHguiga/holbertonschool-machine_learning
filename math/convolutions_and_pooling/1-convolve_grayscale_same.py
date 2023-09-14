@@ -2,12 +2,13 @@
 
 import numpy as np
 
-def convolve_grayscale_valid(images, kernel):
+def convolve_grayscale_same(images, kernel):
     m, h, w = images.shape
     fh, fw = kernel.shape
 
-    h = h - fh + 1
-    w = w - fw + 1
+    ph  = int((fh - 1) / 2 + 0.5)
+    pw  = int((fw - 1) / 2 + 0.5)
+    images = np.pad(images, ((0, 0), (ph, ph), (pw, pw)), 'constant')
     convolution = np.zeros((m, h, w))
 
     for i in range(h):
