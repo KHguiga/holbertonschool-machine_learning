@@ -10,4 +10,3 @@ def most_acute_angle(y):
             (((y[k + 1] - y[k])**2) + 1) * (((y[k] - y[k - 1])**2) + 1))
     )
     return np.argmin(angles)+1             
-
