@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 def lenet5(x, y):
-    he_normal = tf.contrib.layers.variance_scaling_initializer()
+    he_normal = tf.keras.initializers.VarianceScaling(scale=2.0)
     relu = tf.nn.relu
 
     C1 = tf.layers.Conv2D(6, 5, padding='same', activation=relu, kernel_initializer=he_normal)
