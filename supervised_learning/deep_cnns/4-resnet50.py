@@ -19,11 +19,11 @@ def resnet50():
     X = projection_block(X, [64, 64, 256], s=1)
     for _ in range(2):
         X = identity_block(X, [64, 64, 256])
-    
+
     X = projection_block(X, [128, 128, 512])
     for _ in range(3):
         X = identity_block(X, [128, 128, 512])
-    
+
     X = projection_block(X, [256, 256, 1024])
     for _ in range(5):
         X = identity_block(X, [256, 256, 1024])
@@ -35,5 +35,5 @@ def resnet50():
     X = K.layers.AveragePooling2D(pool_size=(7, 7), strides=(1, 1))(X)
     Y = K.layers.Dense(1000, activation='softmax',
                        kernel_initializer=K.initializers.he_normal())(X)
-    
+
     return K.models.Model(inputs=inputs, outputs=Y)
