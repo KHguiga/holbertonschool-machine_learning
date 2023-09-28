@@ -10,7 +10,7 @@ def transition_layer(X, nb_filters, compression):
 
     # 1x1 conv
     X = K.layers.BatchNormalization(axis=3)(X)
-    X = K.layers.Activation('relu')(X)
+    X = K.layers.ReLU()(X)
     X = K.layers.Conv2D(nb_filters, (1, 1), padding='same',
                         kernel_initializer=K.initializers.he_normal())(X)
 
