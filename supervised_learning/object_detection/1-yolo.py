@@ -5,6 +5,10 @@ import numpy as np
 import os
 
 
+def sigmoid(x):
+    """sigmoid function"""
+    return 1 / (1 + np.exp(-x))
+
 
 class Yolo:
     """Yolo class"""
@@ -33,7 +37,7 @@ class Yolo:
         i = 0
         for output in outputs:
             grid_h, grid_w, nb_box, _ = output.shape
-            box_conf = np.expand_dims(1 / (1 + np.exp(-(output[:, :, :, 4]))), axis=-1)
+            box_conf = np.expand_dims(sigmoid(output[:, :, :, 4]), axis=-1)
             box_prob = sigmoid(output[:, :, :, 5:])
             box_confidences.append(box_conf)
             box_class_probs.append(box_prob)
@@ -58,8 +62,8 @@ class Yolo:
             p_h = self.anchors[i, :, 1]
 
             # yolo formula (get the coordinates in the prediction box)
-            b_x = (1 / (1 + np.exp(-t_x)) + c_x)
-            b_y = (1 / (1 + np.exp(-t_x)) + c_y)
+            b_x = (sigmoid(t_x) + c_x)
+            b_y = (sigmoid(t_y) + c_y)
             b_w = (np.exp(t_w) * p_w)
             b_h = (np.exp(t_h) * p_h)
             # normalize to the input size
