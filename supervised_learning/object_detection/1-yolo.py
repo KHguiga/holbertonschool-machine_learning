@@ -61,8 +61,8 @@ class Yolo:
             # yolo formula (get the coordinates in the prediction box)
             b_x = (sigmoid(t_x) + c_x) / grid_w
             b_y = (sigmoid(t_y) + c_y) / grid_h
-            b_w = (np.exp(t_w) * p_w) / self.model.input.shape[1] #.value
-            b_h = (np.exp(t_h) * p_h) / self.model.input.shape[2] #.value
+            b_w = (np.exp(t_w) * p_w) / self.model.input.shape[1].value
+            b_h = (np.exp(t_h) * p_h) / self.model.input.shape[2].value
             # normalize to the input size
 #             b_x = b_x / grid_w
 #             b_y = b_y / grid_h
