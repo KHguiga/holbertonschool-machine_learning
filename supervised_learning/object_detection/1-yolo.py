@@ -71,8 +71,8 @@ class Yolo:
             # normalize to the input size
             b_x = b_x / grid_w
             b_y = b_y / grid_h
-            b_w = b_w / self.model.input.shape[1]
-            b_h = b_h / self.model.input.shape[2]
+            b_w = b_w / self.model.input.shape[1].value
+            b_h = b_h / self.model.input.shape[2].value
             # scale to the image size (in pixels)
             # top left corner
             x1 = (b_x - b_w / 2) * img_w
