@@ -22,8 +22,8 @@ class Yolo:
         if not os.path.exists(classes_path):
             raise FileNotFoundError("Wrong classes file path")
         self.model = K.models.load_model(model_path)
-        with open(classes_path) as f:
-            self.class_names = [class_name.strip() for class_name in f.readlines()]
+        with open(classes_path, 'r') as f:
+            self.class_names = [line[:-1] for line in f]
         self.class_t = class_t
         self.nms_t = nms_t
         self.anchors = anchors
@@ -34,10 +34,13 @@ class Yolo:
         box_confidences = []
         box_class_probs = []
         img_h, img_w = image_size
-        
-        for i, output in enumerate(outputs):
+        i = 0
+        for output in outputs:
             grid_h, grid_w, nb_box, _ = output.shape
-            
+            box_conf = sigmoid(output[:, :, :, 4])
+            box_prob = sigmoid(output[:, :, :, 5:])
+            box_confidences.append(box_conf)
+            box_class_probs.append(box_prob)
             # t_x, t_y : x and y coordinates of the center pt of the anchor box
             # t_w, t_h : width and height of the anchor box
             t_x = output[:, :, :, 0]
@@ -59,15 +62,15 @@ class Yolo:
             p_h = self.anchors[i, :, 1]
 
             # yolo formula (get the coordinates in the prediction box)
-            b_x = (sigmoid(t_x) + c_x) / grid_w
-            b_y = (sigmoid(t_y) + c_y) / grid_h
-            b_w = (np.exp(t_w) * p_w) / self.model.input.shape[1].value
-            b_h = (np.exp(t_h) * p_h) / self.model.input.shape[2].value
+            b_x = (sigmoid(t_x) + c_x)
+            b_y = (sigmoid(t_y) + c_y)
+            b_w = (np.exp(t_w) * p_w)
+            b_h = (np.exp(t_h) * p_h)
             # normalize to the input size
-#             b_x = b_x / grid_w
-#             b_y = b_y / grid_h
-#             b_w = b_w / self.model.input.shape[1]
-#             b_h = b_h / self.model.input.shape[2]
+            b_x = b_x / grid_w
+            b_y = b_y / grid_h
+            b_w = b_w / self.model.input.shape[1].value
+            b_h = b_h / self.model.input.shape[2].value
             # scale to the image size (in pixels)
             # top left corner
             x1 = (b_x - b_w / 2) * img_w
@@ -82,11 +85,5 @@ class Yolo:
             box[:, :, :, 2] = x2
             box[:, :, :, 3] = y2
             boxes.append(box)
-            
-            box_conf = sigmoid(output[:, :, :, 4:5])
-            box_prob = sigmoid(output[:, :, :, 5:])
-            box_confidences.append(box_conf)
-            box_class_probs.append(box_prob)
-            
+            i += 1
         return boxes, box_confidences, box_class_probs
-    
