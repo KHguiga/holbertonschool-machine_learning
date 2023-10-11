@@ -22,8 +22,8 @@ class Yolo:
         if not os.path.exists(classes_path):
             raise FileNotFoundError("Wrong classes file path")
         self.model = K.models.load_model(model_path)
-        with open(classes_path, 'r') as f:
-            self.class_names = [line[:-1] for line in f]
+        with open(classes_path) as f:
+            self.class_names = [class_name.strip() for class_name in f.readlines()]
         self.class_t = class_t
         self.nms_t = nms_t
         self.anchors = anchors
@@ -83,7 +83,7 @@ class Yolo:
             box[:, :, :, 3] = y2
             boxes.append(box)
             
-            box_conf = np.expand_dims(sigmoid(output[:, :, :, 4]), axis=-1)
+            box_conf = sigmoid(output[:, :, :, 4:5])
             box_prob = sigmoid(output[:, :, :, 5:])
             box_confidences.append(box_conf)
             box_class_probs.append(box_prob)
