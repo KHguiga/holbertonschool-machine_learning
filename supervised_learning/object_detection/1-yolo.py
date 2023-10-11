@@ -5,10 +5,6 @@ import numpy as np
 import os
 
 
-def sigmoid(x):
-    """sigmoid function"""
-    return 1 / (1 + np.exp(-x))
-
 
 class Yolo:
     """Yolo class"""
