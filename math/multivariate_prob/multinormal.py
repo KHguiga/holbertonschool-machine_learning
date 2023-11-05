@@ -5,6 +5,7 @@ Contains the class MultiNormal
 
 import numpy as np
 
+
 class MultiNormal:
     """represents a multinormal distribution"""
     def __init__(self, data):

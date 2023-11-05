@@ -6,6 +6,7 @@ Contains the function correlation
 
 import numpy as np
 
+
 def correlation(C):
     """calculates the correlation matrix from the covariance matrix"""
     if type(C) is not np.ndarray:

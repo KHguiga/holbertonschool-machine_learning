@@ -6,6 +6,7 @@ Contains the function mean_cov
 
 import numpy as np
 
+
 def mean_cov(X):
     """calculates the mean and covariance of X"""
     if type(X) is not np.ndarray or len(X.shape) != 2:
