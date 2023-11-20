@@ -3,6 +3,20 @@
 import tensorflow.keras as K
 
 def inception_block(A_prev, filters):
+    """Builds a Transition Layer.
+
+    Args:
+        import .
+        X: the output from the previous layer.
+
+        nb_filters: an integer representing the number of filters in X.
+
+        compression: the compression factor for the transition layer.
+
+    Returns:
+        The output of the transition layer and the number of filters within
+        the output, respectively.
+    """
 
     F1, F3R, F3, F5R, F5, FPP = filters
 
