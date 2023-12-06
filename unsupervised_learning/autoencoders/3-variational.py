@@ -42,7 +42,7 @@ def autoencoder(input_dims, hidden_layers, latent_dims):
 
     latent_space = keras.layers.Lambda(sampling)([mean, log_sigma])
     encoder = keras.models.Model(
-        encoder_input, [mean, log_sigma, latent_space])
+        encoder_input, [latent_space, mean, log_sigma])
 
     decoder_input = keras.layers.Input(shape=(latent_dims,))
     decoder_output = decoder_input
@@ -55,10 +55,10 @@ def autoencoder(input_dims, hidden_layers, latent_dims):
     decoder = keras.models.Model(decoder_input, decoder_output)
 
     autoencoder = keras.models.Model(
-        encoder_input, decoder(encoder(encoder_input)[2]))
+        encoder_input, decoder(encoder(encoder_input)[0]))
 
     reconstruction_loss = keras.losses.binary_crossentropy(
-        encoder_input, decoder(encoder(encoder_input)[2])) * input_dims
+        encoder_input, decoder(encoder(encoder_input)[0])) * input_dims
 
     kl_loss = 1 + log_sigma - \
         keras.backend.square(mean) - keras.backend.exp(log_sigma)
