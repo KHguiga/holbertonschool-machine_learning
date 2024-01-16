@@ -76,7 +76,7 @@ def train_mini_batch(X_train, Y_train, X_valid, Y_valid, batch_size=32,
 
                 # print mini-batch result every 100 batches
                 if step_number != 0 \
-                        and step_number % 100 == 0 and epoch < epochs:
+                        and (step_number + 1) % 100 == 0 and epoch < epochs:
                     step_cost, step_accuracy = sess.run(
                     [loss, accuracy], feed_dict={x: x_batch, y: y_batch})
                     print("\tStep {}:".format(step_number))
