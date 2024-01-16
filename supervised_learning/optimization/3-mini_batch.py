@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 shuffle_data = __import__('2-shuffle_data').shuffle_data
-import tensorflow as tf
-
+import tensorflow.compat.v1 as tf
 
 def train_mini_batch(X_train, Y_train, X_valid, Y_valid,
                      batch_size=32, epochs=5, load_path="/tmp/model.ckpt",
