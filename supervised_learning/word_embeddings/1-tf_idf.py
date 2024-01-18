@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+'''
+Modulos that contains a function that
+performs tf-idf
+'''
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
