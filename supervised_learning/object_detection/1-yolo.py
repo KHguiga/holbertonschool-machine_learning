@@ -113,8 +113,8 @@ class Yolo:
             # conv in pixel : absolute coordinate
             x1 = (b_x - b_w / 2) * image_width
             y1 = (b_y - b_h / 2) * image_height
-            x2 = x1 + b_w * image_width
-            y2 = y1 + b_h * image_height
+            x2 = (b_x + b_w / 2) * image_width
+            y2 = (b_y + b_h / 2) * image_height
             print("x2",x2, "y2",y2)
 
             # Update box array with box coordinates and dimensions
