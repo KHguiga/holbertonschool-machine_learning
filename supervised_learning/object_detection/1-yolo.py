@@ -65,7 +65,8 @@ class Yolo:
             grid_x = np.expand_dims(grid_x, axis=-1)
             grid_y = np.expand_dims(grid_y, axis=-1)
 
-            print(np.array_equal(array1, array2))
+            print(np.array_equal(grid_x, c_x))
+            print(np.array_equal(grid_y, c_y))
 
             # p_w, p_h : anchors dimensions in the c
 
