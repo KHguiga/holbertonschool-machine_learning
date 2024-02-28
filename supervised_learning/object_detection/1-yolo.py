@@ -56,7 +56,7 @@ class Yolo:
             c_y = np.tile(c_y, grid_w)
             c_y = c_y.reshape(1, grid_h, grid_w).T
 
-            print(c_x, c_y)
+            print("c_x",c_x, "c_y",c_y)
 
             # p_w, p_h : anchors dimensions in the c
 
