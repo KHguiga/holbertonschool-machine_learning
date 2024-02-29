@@ -29,7 +29,10 @@ def projection_block(A_prev, filters, s=2):
     """
 
     # Init Kernel
-    init = K.initializers.he_normal()
+    init = K.initializers.VarianceScaling(scale=2.0,
+                                          mode='fan_in',
+                                          distribution='truncated_normal',
+                                          seed=None)
 
     # Init filters
     F11, F3, F12 = filters
@@ -44,7 +47,7 @@ def projection_block(A_prev, filters, s=2):
     Bn1 = K.layers.BatchNormalization()(conv1x1)
 
     # Relu activation
-    relu_1 = K.layers.ReLU()(Bn1)
+    relu_1 = K.layers.Activation('relu')(Bn1)
 
     # Conv3x3
     conv3x3 = K.layers.Conv2D(F3,
@@ -56,7 +59,7 @@ def projection_block(A_prev, filters, s=2):
     Bn2 = K.layers.BatchNormalization()(conv3x3)
 
     # Relu activation
-    relu_2 = K.layers.ReLU()(Bn2)
+    relu_2 = K.layers.Activation('relu')(Bn2)
     conv1x1_2 = K.layers.Conv2D(F12,
                                 (1, 1),
                                 kernel_initializer=init)(relu_2)
@@ -77,6 +80,6 @@ def projection_block(A_prev, filters, s=2):
     add = K.layers.Add()([Bn3, Bn1_add])
 
     # Relu activation
-    relu_3 = K.layers.ReLU()(add)
+    relu_3 = K.layers.Activation('relu')(add)
 
     return relu_3
