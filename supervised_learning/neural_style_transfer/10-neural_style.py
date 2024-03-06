@@ -168,7 +168,7 @@ class NST:
         for i in range(iterations):
             grads, J, J_content, J_style, J_var = self.compute_grads(generated_image)
             if step is not None and i % step == 0:
-                print("Cost at iteration {}: {}, content {}, style {}, var {}".format(i, J, J_content, J_style))
+                print("Cost at iteration {}: {}, content {}, style {}, var {}".format(i, J, J_content, J_style, J_var))
             if J < best_cost:
                 best_cost = J.numpy()
                 best_image = generated_image.numpy()[0]
@@ -180,5 +180,5 @@ class NST:
             best_cost = J.numpy()
             best_image = generated_image.numpy()[0]
         if step is not None:
-            print("Cost at iteration {}: {}, content {}, style {}, var {}".format(iterations, J, J_content, J_style))
+            print("Cost at iteration {}: {}, content {}, style {}, var {}".format(iterations, J, J_content, J_style, J_var))
         return best_image, best_cost
