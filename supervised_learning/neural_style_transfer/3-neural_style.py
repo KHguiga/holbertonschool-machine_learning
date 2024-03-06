@@ -79,31 +79,28 @@ class NST:
 
     def generate_features(self):
         
-        style_inputs = tf.keras.applications.vgg19.preprocess_input(
+        preprocessed_s = tf.keras.applications.vgg19.preprocess_input(
             self.style_image * 255)
-        content_inputs = tf.keras.applications.vgg19.preprocess_input(
+        preprocessed_c = tf.keras.applications.vgg19.preprocess_input(
             self.content_image * 255)
         
-        style_outputs = self.model(style_inputs)
-        content_outputs = self.model(content_inputs)
+        # Get the outputs of style and content layers for style and content images
+        style_outputs = self.model(preprocessed_s)
+        content_outputs = self.model(preprocessed_c)
 
-        self.gram_style_features = [self.gram_matrix(
-            style_layer) for style_layer in style_outputs[:-1]]
+        # Extract the style features (gram matrices)
+        self.gram_style_features = [self.gram_matrix(style_output) for style_output in style_outputs[:-1]]
+        # Extract the content feature
         self.content_feature = content_outputs[-1]
 
     @staticmethod
     def gram_matrix(input_layer):
-        if not isinstance(input_layer, (tf.Tensor, tf.Variable)) or input_layer.shape.rank != 4:
+        if not isinstance(input_layer, (tf.Variable, tf.Tensor)) or len(input_layer.shape) != 4:
             raise TypeError("input_layer must be a tensor of rank 4")
 
-        _, h, w, c = input_layer.shape
-        # Reshape the input_layer to (h*w, c)
-        reshaped_layer = tf.reshape(input_layer, (-1, c))
-        # Calculate the Gram matrix
-        gram = tf.matmul(tf.transpose(reshaped_layer), reshaped_layer)
-        # Normalize the Gram matrix
-        gram /= tf.cast(h * w, tf.float32)
-        # Add an extra dimension to match the required shape (1, c, c)
-        gram = tf.expand_dims(gram, axis=0)
+        result = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
 
-        return gram
+        input_shape = tf.shape(input_layer)
+        num_locations = tf.cast(input_shape[1] * input_shape[2], tf.float32)
+
+        return result / num_locations
