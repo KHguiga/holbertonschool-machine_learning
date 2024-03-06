@@ -73,17 +73,8 @@ class NST:
         return model
     @staticmethod
     def gram_matrix(input_layer):
-        if not isinstance(input_layer, (tf.Tensor, tf.Variable)) or input_layer.shape.rank != 4:
-            raise TypeError("input_layer must be a tensor of rank 4")
-
-        _, h, w, c = input_layer.shape
-        # Reshape the input_layer to (h*w, c)
-        reshaped_layer = tf.reshape(input_layer, (-1, c))
-        # Calculate the Gram matrix
-        gram = tf.matmul(tf.transpose(reshaped_layer), reshaped_layer)
-        # Normalize the Gram matrix
-        gram /= tf.cast(h * w, tf.float32)
-        # Add an extra dimension to match the required shape (1, c, c)
-        gram = tf.expand_dims(gram, axis=0)
-
-        return gram
+        if not (isinstance(input_layer, tf.Tensor) or isinstance(input_layer, tf.Variable)) or input_layer.shape.ndims != 4:
+            raise TypeError('input_layer must be a tensor of rank 4')
+        _, nh, nw, _ = input_layer.shape.dims
+        G = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
+        return G / tf.cast(nh * nw, tf.float32)
