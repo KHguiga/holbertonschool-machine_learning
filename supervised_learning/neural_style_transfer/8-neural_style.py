@@ -20,20 +20,19 @@ class NST:
                                    ) != 3 or content_image.shape[2] != 3:
             raise TypeError(
                 "content_image must be a numpy.ndarray with shape (h, w, 3)")
-        if not isinstance(alpha, (int, float)) or alpha < 0:
+        if not isinstance(alpha, float) and not isinstance(alpha, int
+                                                           ) or alpha < 0:
             raise TypeError("alpha must be a non-negative number")
-        if not isinstance(beta, (int, float)) or beta < 0:
+        if not isinstance(beta, float) and not isinstance(beta, int
+                                                          ) or beta < 0:
             raise TypeError("beta must be a non-negative number")
 
         self.style_image = self.scale_image(style_image)
         self.content_image = self.scale_image(content_image)
         self.alpha = alpha
         self.beta = beta
-
         self.load_model()
-
         self.generate_features()
-
     @staticmethod
     def scale_image(image):
         if not isinstance(image, np.ndarray
@@ -58,118 +57,74 @@ class NST:
         return scaled_image
 
     def load_model(self):
-        base_model = tf.keras.applications.VGG19(include_top=False)
-        base_model.trainable = False
-
-        custom_objects = {'MaxPooling2D': tf.keras.layers.AveragePooling2D}
-        base_model.save('base_model')
-        base_model = tf.keras.models.load_model('base_model',
-                                                custom_objects=custom_objects)
-
-        outputs = [base_model.get_layer(layer
-                                        ).output for layer in self.style_layers]
-        outputs.append(base_model.get_layer(self.content_layer).output)
-        model = tf.keras.Model(base_model.inputs, outputs)
-
+        vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
+        x = vgg.input
+        model_outputs = []
+        content_output = None
+        for layer in vgg.layers[1:]:
+            if "pool" in layer.name:
+                x = tf.keras.layers.AveragePooling2D(pool_size=layer.pool_size, strides=layer.strides, name=layer.name)(x)
+            else:
+                x = layer(x)
+                if layer.name in self.style_layers:
+                    model_outputs.append(x)
+                if layer.name == self.content_layer:
+                    content_output = x
+                layer.trainable = False
+        model_outputs.append(content_output)
+        model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
-
     @staticmethod
     def gram_matrix(input_layer):
-        if not isinstance(input_layer, (tf.Variable, tf.Tensor)) or len(input_layer.shape) != 4:
-            raise TypeError("input_layer must be a tensor of rank 4")
-
-        result = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
-
-        input_shape = tf.shape(input_layer)
-        num_locations = tf.cast(input_shape[1] * input_shape[2], tf.float32)
-
-        return result / num_locations
+        if not (isinstance(input_layer, tf.Tensor) or isinstance(input_layer, tf.Variable)) or input_layer.shape.ndims != 4:
+            raise TypeError('input_layer must be a tensor of rank 4')
+        _, nh, nw, _ = input_layer.shape.dims
+        G = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
+        return G / tf.cast(nh * nw, tf.float32)
 
     def generate_features(self):
-        style_inputs = tf.keras.applications.vgg19.preprocess_input(
-            self.style_image * 255)
-        content_inputs = tf.keras.applications.vgg19.preprocess_input(
-            self.content_image * 255)
-
-        style_outputs = self.model(style_inputs)
-        content_outputs = self.model(content_inputs)
-
-        self.gram_style_features = [self.gram_matrix(
-            style_layer) for style_layer in style_outputs[:-1]]
-        self.content_feature = content_outputs[-1]
-
+        preprocessed_s = tf.keras.applications.vgg19.preprocess_input(self.style_image * 255)
+        preprocessed_c = tf.keras.applications.vgg19.preprocess_input(self.content_image * 255)
+        style_features = self.model(preprocessed_s)[:-1]
+        self.content_feature = self.model(preprocessed_c)[-1]
+        self.gram_style_features = [self.gram_matrix(style_feature) for style_feature in style_features]
+        
     def layer_style_cost(self, style_output, gram_target):
-        if not isinstance(style_output, (tf.Variable, tf.Tensor)) or len(style_output.shape) != 4:
-            raise TypeError("style_output must be a tensor of rank 4")
-
-        _, _, _, c = style_output.shape
-
-        if not isinstance(gram_target, (tf.Variable, tf.Tensor)) or gram_target.shape != (1, c, c):
-            raise TypeError(
-                f"gram_target must be a tensor of shape [1, {c}, {c}]")
-
+        if not (isinstance(style_output, tf.Tensor) or isinstance(style_output, tf.Variable)) or style_output.shape.ndims != 4:
+            raise TypeError('style_output must be a tensor of rank 4')
+        m, _, _, nc = style_output.shape.dims
+        if not (isinstance(gram_target, tf.Tensor) or isinstance(gram_target, tf.Variable)) or gram_target.shape.dims != [m, nc, nc]:
+            raise TypeError('gram_target must be a tensor of shape [{}, {}, {}]'.format(m, nc, nc))
         gram_style = self.gram_matrix(style_output)
-
-        style_loss_layer = tf.math.reduce_mean(
-            tf.square(
-                tf.subtract(gram_target, gram_style)))
-
-        return style_loss_layer
-
+        return tf.reduce_sum(tf.square(gram_style - gram_target)) / tf.square(tf.cast(nc, tf.float32))
     def style_cost(self, style_outputs):
-        style_len = len(self.style_layers)
-        if not isinstance(style_outputs, list
-                          ) or len(style_outputs) != style_len:
-            raise TypeError(
-                f"style_outputs must be a list with a length of {style_len}")
-
-        style_outputs_cost = tf.add_n([self.layer_style_cost(
-            style_output, self.gram_style_features[i]
-        ) for i, style_output in enumerate(style_outputs)])
-
-        return style_outputs_cost * (self.beta / style_len)
-
+        if type(style_outputs) is not list or len(style_outputs) != len(self.style_layers):
+            raise TypeError('style_outputs must be a list with a length of {}'.format(len(self.style_layers)))
+        J_style = tf.add_n([self.layer_style_cost(style_outputs[i], self.gram_style_features[i]) for i in range(len(style_outputs))])
+        J_style /= tf.cast(len(style_outputs), tf.float32)
+        return J_style
     def content_cost(self, content_output):
-        content_shape = self.content_feature.shape
-
-        if not isinstance(content_output, (tf.Variable, tf.Tensor)) or content_output.shape != content_shape:
-            raise TypeError(
-                f"content_output must be a tensor of shape {content_shape}")
-
-        content_cost = tf.math.reduce_mean(
-            tf.square(
-                tf.subtract(self.content_feature, content_output)))
-
-        return content_cost
-
+        if not (isinstance(content_output, tf.Tensor) or isinstance(content_output, tf.Variable)) or content_output.shape.dims != self.content_feature.shape.dims:
+            raise TypeError('content_output must be a tensor of shape {}'.format(self.content_feature.shape))
+        _, nh, nw, nc = content_output.shape.dims
+        return tf.reduce_sum(tf.square(content_output - self.content_feature)) / tf.cast(nh * nw * nc, tf.float32)
     def total_cost(self, generated_image):
-        content_shape = self.content_image.shape
-        if not isinstance(generated_image, (tf.Variable, tf.Tensor)) or generated_image.shape != content_shape:
-            raise TypeError(
-                f"generated_image must be a tensor of shape {content_shape}")
+        if not (isinstance(generated_image, tf.Tensor) or isinstance(generated_image, tf.Variable)) or generated_image.shape.dims != self.content_image.shape.dims:
+            raise TypeError('generated_image must be a tensor of shape {}'.format(self.content_image.shape))
+        preprocessed = tf.keras.applications.vgg19.preprocess_input(generated_image * 255)
+        model_outputs = self.model(preprocessed)
+        style_outputs = [style_layer for style_layer in model_outputs[:-1]]
+        content_output = model_outputs[-1]
 
-        preprocessed = tf.keras.applications.vgg19.preprocess_input(
-            generated_image * 255)
-        outputs = self.model(preprocessed)
-        content_output = outputs[-1]
-        style_outputs = outputs[:-1]
-
-        content_cost = self.content_cost(content_output)
-        style_cost = self.style_cost(style_outputs)
-        total_cost = self.alpha * content_cost + self.beta * style_cost
-
-        return (total_cost, content_cost, style_cost)
-
+        J_style = self.style_cost(style_outputs)
+        J_content = self.content_cost(content_output)
+        J = (self.alpha * J_content) + (self.beta * J_style)
+        return J, J_content, J_style
     def compute_grads(self, generated_image):
-        content_shape = self.content_image.shape
-        if not isinstance(generated_image, (tf.Variable, tf.Tensor)) or generated_image.shape != content_shape:
-            raise TypeError(
-                f"generated_image must be a tensor of shape {content_shape}")
-
+        if not (isinstance(generated_image, tf.Tensor) or isinstance(generated_image, tf.Variable)) or generated_image.shape.dims != self.content_image.shape.dims:
+            raise TypeError('generated_image must be a tensor of shape {}'.format(self.content_image.shape))
         with tf.GradientTape() as tape:
             tape.watch(generated_image)
-            J_total, J_content, J_style = self.total_cost(
-                generated_image)
-        grad = tape.gradient(J_total, generated_image)
-
-        return (grad, J_total, J_content, J_style)
+            J, J_content, J_style = self.total_cost(generated_image)
+        grads = tape.gradient(J, generated_image)
+        return grads, J, J_content, J_style
