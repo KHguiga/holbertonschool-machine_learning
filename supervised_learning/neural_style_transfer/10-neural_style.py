@@ -113,7 +113,7 @@ class NST:
         return tf.reduce_sum(tf.square(content_output - self.content_feature)) / tf.cast(nh * nw * nc, tf.float32)
     @staticmethod
     def variational_cost(generated_image):
-        if not isinstance(generated_image, tf.Tensor) or not 3 <= generated_image.shape.ndims <= 4:
+        if not (isinstance(generated_image, tf.Tensor) or isinstance(generated_image, tf.Variable)) or not 3 <= generated_image.shape.ndims <= 4:
             raise TypeError('image must be a tensor of rank 3 or 4')
         return tf.reduce_sum(tf.image.total_variation(generated_image))
     def total_cost(self, generated_image):
@@ -160,7 +160,7 @@ class NST:
             raise ValueError('beta2 must be in the range [0, 1]')
 
         content_image_tensor = tf.convert_to_tensor(self.content_image, dtype=tf.float32)
-        generated_image = tf.Variable(content_image_tensor)
+        generated_image = tf.Variable(self.content_image)
         optimizer = tf.optimizers.Adam(learning_rate=lr, beta_1=beta1, beta_2=beta2)
         best_cost = np.inf
         best_image = None
