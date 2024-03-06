@@ -12,7 +12,6 @@ class NST:
     content_layer = 'block5_conv2'
 
     def __init__(self, style_image, content_image, alpha=1e4, beta=1):
-        tf.enable_eager_execution()
         if type(style_image) is not np.ndarray or style_image.ndim != 3 or style_image.shape[2] != 3:
             raise TypeError('style_image must be a numpy.ndarray with shape (h, w, 3)')
         if type(content_image) is not np.ndarray or content_image.ndim != 3 or content_image.shape[2] != 3:
@@ -28,12 +27,23 @@ class NST:
 
     @staticmethod
     def scale_image(image):
-        if type(image) is not np.ndarray or image.ndim != 3 or image.shape[2] != 3:
-            raise TypeError('image must be a numpy.ndarray with shape (h, w, 3)')
-        max_dims = 512
-        shape = image.shape[:2]
-        scale = max_dims / max(shape[0], shape[1])
-        new_shape = (int(scale * shape[0]), int(scale * shape[1]))
-        image = np.expand_dims(image, axis=0)
-        image = tf.clip_by_value(tf.image.resize_bicubic(image, new_shape) / 255.0, 0.0, 1.0)
-        return image
+        if not isinstance(image, np.ndarray
+                          ) or len(image.shape) != 3 or image.shape[2] != 3:
+            raise TypeError(
+                "image must be a numpy.ndarray with shape (h, w, 3)")
+
+        h, w, _ = image.shape
+        if h > w:
+            h_new = 512
+            w_new = w * h_new // h
+        else:
+            w_new = 512
+            h_new = h * w_new // w
+
+        scaled_image = tf.image.resize(image, tf.constant([h_new, w_new],
+                                                          dtype=tf.int32),
+                                       tf.image.ResizeMethod.BICUBIC)
+        scaled_image = tf.reshape(scaled_image, (1, h_new, w_new, 3))
+        scaled_image = tf.clip_by_value(scaled_image / 255, 0.0, 1.0)
+
+        return scaled_image
