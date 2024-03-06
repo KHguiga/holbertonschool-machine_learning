@@ -112,10 +112,10 @@ class NST:
         _, nh, nw, nc = content_output.shape.dims
         return tf.reduce_sum(tf.square(content_output - self.content_feature)) / tf.cast(nh * nw * nc, tf.float32)
     @staticmethod
-    def variational_cost(image):
-        if not (isinstance(image, tf.Tensor) or isinstance(image, tf.Variable)) or not 3 <= image.shape.ndims <= 4:
+    def variational_cost(generated_image):
+        if not isinstance(generated_image, tf.Tensor) or not 3 <= generated_image.shape.ndims <= 4:
             raise TypeError('image must be a tensor of rank 3 or 4')
-        return tf.reduce_sum(tf.image.total_variation(image))
+        return tf.reduce_sum(tf.image.total_variation(generated_image))
     def total_cost(self, generated_image):
         if not (isinstance(generated_image, tf.Tensor) or isinstance(generated_image, tf.Variable)) or generated_image.shape.dims != self.content_image.shape.dims:
             raise TypeError('generated_image must be a tensor of shape {}'.format(self.content_image.shape))
