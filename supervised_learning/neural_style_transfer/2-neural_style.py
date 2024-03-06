@@ -32,7 +32,6 @@ class NST:
         self.alpha = alpha
         self.beta = beta
         self.model = self.load_model()
-
     @staticmethod
     def scale_image(image):
         if not isinstance(image, np.ndarray
@@ -40,7 +39,7 @@ class NST:
             raise TypeError(
                 "image must be a numpy.ndarray with shape (h, w, 3)")
 
-        h, w, c = image.shape
+        h, w, _ = image.shape
         if h > w:
             h_new = 512
             w_new = w * h_new // h
@@ -60,17 +59,31 @@ class NST:
         # Load our model. We load pretrained VGG, trained on imagenet data
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
         vgg.trainable = False
-
+        
         # Convert MaxPooling2D to AveragePooling2D for style layers
         for layer in vgg.layers:
             if 'block' in layer.name and 'pool' in layer.name:
                 layer.__class__ = tf.keras.layers.AveragePooling2D
-
-        # Get output layers corresponding to style and content layers
+        # Get output layers corresponding to style and content layers 
         model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
         model_outputs.append(vgg.get_layer(self.content_layer).output)
-
         # Build model
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
         return model
+    @staticmethod
+    def gram_matrix(input_layer):
+        if not isinstance(input_layer, (tf.Tensor, tf.Variable)) or input_layer.shape.rank != 4:
+            raise TypeError("input_layer must be a tensor of rank 4")
+
+        _, h, w, c = input_layer.shape
+        # Reshape the input_layer to (h*w, c)
+        reshaped_layer = tf.reshape(input_layer, (-1, c))
+        # Calculate the Gram matrix
+        gram = tf.matmul(tf.transpose(reshaped_layer), reshaped_layer)
+        # Normalize the Gram matrix
+        gram /= tf.cast(h * w, tf.float32)
+        # Add an extra dimension to match the required shape (1, c, c)
+        gram = tf.expand_dims(gram, axis=0)
+
+        return gram
