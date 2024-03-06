@@ -32,6 +32,7 @@ class NST:
         self.alpha = alpha
         self.beta = beta
         self.model = self.load_model()
+
     @staticmethod
     def scale_image(image):
         if not isinstance(image, np.ndarray
@@ -59,13 +60,16 @@ class NST:
         # Load our model. We load pretrained VGG, trained on imagenet data
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
         vgg.trainable = False
+
         # Convert MaxPooling2D to AveragePooling2D for style layers
         for layer in vgg.layers:
             if 'block' in layer.name and 'pool' in layer.name:
                 layer.__class__ = tf.keras.layers.AveragePooling2D
-        # Get output layers corresponding to style and content layers 
+
+        # Get output layers corresponding to style and content layers
         model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
         model_outputs.append(vgg.get_layer(self.content_layer).output)
+
         # Build model
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
