@@ -3,6 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
+
 class NST:
     style_layers = ['block1_conv1', 'block2_conv1', 'block3_conv1',
                     'block4_conv1', 'block5_conv1']
@@ -30,11 +31,8 @@ class NST:
         self.content_image = self.scale_image(content_image)
         self.alpha = alpha
         self.beta = beta
-        self.model = self.load_model()
-        self.gram_style_features = None
-        self.content_feature = None
+        self.load_model()
         self.generate_features()
-
     @staticmethod
     def scale_image(image):
         if not isinstance(image, np.ndarray
@@ -59,48 +57,34 @@ class NST:
         return scaled_image
 
     def load_model(self):
-        # Load our model. We load pretrained VGG, trained on imagenet data
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
-        vgg.trainable = False
-
-        # Convert MaxPooling2D to AveragePooling2D for style layers
-        for layer in vgg.layers:
-            if 'block' in layer.name and 'pool' in layer.name:
-                layer.__class__ = tf.keras.layers.AveragePooling2D
-
-        # Get output layers corresponding to style and content layers
-        model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
-        model_outputs.append(vgg.get_layer(self.content_layer).output)
-
-        # Build model
+        x = vgg.input
+        model_outputs = []
+        content_output = None
+        for layer in vgg.layers[1:]:
+            if "pool" in layer.name:
+                x = tf.keras.layers.AveragePooling2D(pool_size=layer.pool_size, strides=layer.strides, name=layer.name)(x)
+            else:
+                x = layer(x)
+                if layer.name in self.style_layers:
+                    model_outputs.append(x)
+                if layer.name == self.content_layer:
+                    content_output = x
+                layer.trainable = False
+        model_outputs.append(content_output)
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
-        return model
-
-    def generate_features(self):
-        
-        preprocessed_s = tf.keras.applications.vgg19.preprocess_input(
-            self.style_image * 255)
-        preprocessed_c = tf.keras.applications.vgg19.preprocess_input(
-            self.content_image * 255)
-        
-        # Get the outputs of style and content layers for style and content images
-        style_outputs = self.model(preprocessed_s)
-        content_outputs = self.model(preprocessed_c)
-
-        # Extract the style features (gram matrices)
-        self.gram_style_features = [self.gram_matrix(style_output) for style_output in style_outputs[:-1]]
-        # Extract the content feature
-        self.content_feature = content_outputs[-1]
-
     @staticmethod
     def gram_matrix(input_layer):
-        if not isinstance(input_layer, (tf.Variable, tf.Tensor)) or len(input_layer.shape) != 4:
-            raise TypeError("input_layer must be a tensor of rank 4")
+        if not (isinstance(input_layer, tf.Tensor) or isinstance(input_layer, tf.Variable)) or input_layer.shape.ndims != 4:
+            raise TypeError('input_layer must be a tensor of rank 4')
+        _, nh, nw, _ = input_layer.shape.dims
+        G = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
+        return G / tf.cast(nh * nw, tf.float32)
 
-        result = tf.linalg.einsum('bijc,bijd->bcd', input_layer, input_layer)
-
-        input_shape = tf.shape(input_layer)
-        num_locations = tf.cast(input_shape[1] * input_shape[2], tf.float32)
-
-        return result / num_locations
+    def generate_features(self):
+        preprocessed_s = tf.keras.applications.vgg19.preprocess_input(self.style_image * 255)
+        preprocessed_c = tf.keras.applications.vgg19.preprocess_input(self.content_image * 255)
+        style_features = self.model(preprocessed_s)[:-1]
+        self.content_feature = self.model(preprocessed_c)[-1]
+        self.gram_style_features = [self.gram_matrix(style_feature) for style_feature in style_features]
