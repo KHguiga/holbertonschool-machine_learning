@@ -33,6 +33,7 @@ class NST:
         self.beta = beta
         self.load_model()
         self.generate_features()
+    
     @staticmethod
     def scale_image(image):
         if not isinstance(image, np.ndarray
@@ -57,23 +58,21 @@ class NST:
         return scaled_image
 
     def load_model(self):
+        # Load our model. We load pretrained VGG, trained on imagenet data
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
-        x = vgg.input
-        model_outputs = []
-        content_output = None
-        for layer in vgg.layers[1:]:
-            if "pool" in layer.name:
-                x = tf.keras.layers.AveragePooling2D(pool_size=layer.pool_size, strides=layer.strides, name=layer.name)(x)
-            else:
-                x = layer(x)
-                if layer.name in self.style_layers:
-                    model_outputs.append(x)
-                if layer.name == self.content_layer:
-                    content_output = x
-                layer.trainable = False
-        model_outputs.append(content_output)
+        vgg.trainable = False
+        
+        # Convert MaxPooling2D to AveragePooling2D for style layers
+        for layer in vgg.layers:
+            if 'block' in layer.name and 'pool' in layer.name:
+                layer.__class__ = tf.keras.layers.AveragePooling2D
+        # Get output layers corresponding to style and content layers 
+        model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
+        model_outputs.append(vgg.get_layer(self.content_layer).output)
+        # Build model
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
+    
     @staticmethod
     def gram_matrix(input_layer):
         if not (isinstance(input_layer, tf.Tensor) or isinstance(input_layer, tf.Variable)) or input_layer.shape.ndims != 4:
@@ -88,7 +87,7 @@ class NST:
         style_features = self.model(preprocessed_s)[:-1]
         self.content_feature = self.model(preprocessed_c)[-1]
         self.gram_style_features = [self.gram_matrix(style_feature) for style_feature in style_features]
-        
+    
     def layer_style_cost(self, style_output, gram_target):
         if not (isinstance(style_output, tf.Tensor) or isinstance(style_output, tf.Variable)) or style_output.shape.ndims != 4:
             raise TypeError('style_output must be a tensor of rank 4')
@@ -97,6 +96,7 @@ class NST:
             raise TypeError('gram_target must be a tensor of shape [{}, {}, {}]'.format(m, nc, nc))
         gram_style = self.gram_matrix(style_output)
         return tf.reduce_sum(tf.square(gram_style - gram_target)) / tf.square(tf.cast(nc, tf.float32))
+    
     def style_cost(self, style_outputs):
         if type(style_outputs) is not list or len(style_outputs) != len(self.style_layers):
             raise TypeError('style_outputs must be a list with a length of {}'.format(len(self.style_layers)))

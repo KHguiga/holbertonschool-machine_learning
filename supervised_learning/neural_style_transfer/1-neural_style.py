@@ -70,4 +70,3 @@ class NST:
         # Build model
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
-        return model
