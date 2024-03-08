@@ -57,25 +57,23 @@ class NST:
         return scaled_image
 
     def load_model(self):
-        # Load our model. We load pretrained VGG, trained on imagenet data
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
-        vgg.trainable = False
-        
-        # Convert MaxPooling2D to AveragePooling2D for style layers
-        for layer in vgg.layers:
-            if 'block' in layer.name and 'pool' in layer.name:
-                pool_size = layer.pool_size
-                strides = layer.strides
-                layer.__class__ = tf.keras.layers.AveragePooling2D
-                layer.pool_size = pool_size
-                layer.strides = strides
-        # Get output layers corresponding to style and content layers 
-        model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
-        model_outputs.append(vgg.get_layer(self.content_layer).output)
-        # Build model
+        x = vgg.input
+        model_outputs = []
+        content_output = None
+        for layer in vgg.layers[1:]:
+            if "pool" in layer.name:
+                x = tf.keras.layers.AveragePooling2D(pool_size=layer.pool_size, strides=layer.strides, name=layer.name)(x)
+            else:
+                x = layer(x)
+                if layer.name in self.style_layers:
+                    model_outputs.append(x)
+                if layer.name == self.content_layer:
+                    content_output = x
+                layer.trainable = False
+        model_outputs.append(content_output)
         model = tf.keras.models.Model(vgg.input, model_outputs)
         self.model = model
-    
     @staticmethod
     def gram_matrix(input_layer):
         if not (isinstance(input_layer, tf.Tensor) or isinstance(input_layer, tf.Variable)) or input_layer.shape.ndims != 4:
