@@ -64,7 +64,7 @@ class NST:
         # Convert MaxPooling2D to AveragePooling2D for style layers
         for layer in vgg.layers:
             if 'block' in layer.name and 'pool' in layer.name:
-                layer.__class__ = tf.keras.layers.AveragePooling2D
+                layer.__class__ = tf.keras.layers.AveragePooling2D(pool_size=layer.pool_size, strides=layer.strides, name=layer.name)
         # Get output layers corresponding to style and content layers 
         model_outputs = [vgg.get_layer(name).output for name in self.style_layers]
         model_outputs.append(vgg.get_layer(self.content_layer).output)
