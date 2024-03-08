@@ -167,6 +167,7 @@ class NST:
 
         for i in range(iterations):
             grads, J, J_content, J_style, J_var = self.compute_grads(generated_image)
+            print("for",J < best_cost)
             if step is not None and i % step == 0:
                 print("Cost at iteration {}: {}, content {}, style {}, var {}".format(i, J, J_content, J_style, J_var))
             if J < best_cost:
@@ -176,6 +177,7 @@ class NST:
             generated_image.assign(tf.clip_by_value(generated_image, clip_value_min=0.0, clip_value_max=1.0))
 
         _, J, J_content, J_style, J_var = self.compute_grads(generated_image)
+        print("last",J < best_cost)
         if J < best_cost:
             best_cost = J.numpy()
             best_image = generated_image.numpy()[0]
