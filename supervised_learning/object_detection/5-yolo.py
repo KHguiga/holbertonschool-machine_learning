@@ -172,7 +172,6 @@ class Yolo:
                                        (self.model.input.shape[1].value,
                                         self.model.input.shape[2].value),
                                        interpolation = cv2.INTER_CUBIC)
-            print(resized_image.dtype)
             rescaled_image = resized_image / 255
             image_shapes.append(image.shape[:2])
             image_list.append(rescaled_image)
