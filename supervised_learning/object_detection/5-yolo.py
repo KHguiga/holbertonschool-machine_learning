@@ -163,16 +163,16 @@ class Yolo:
         return images, image_paths
     
     def preprocess_images(self, images):
-        image_list = []
+        """preprocess all images as inputs for the Darknet model"""
+        pimages = []
         image_shapes = []
+        target_shape = (self.model.input.shape[1].value,
+                                        self.model.input.shape[2].value)
         for image in images:
-            resized_image = cv2.resize(image,
-                                       (self.model.input.shape[1].value,
-                                        self.model.input.shape[2].value),
-                                       interpolation = cv2.INTER_CUBIC)
-            rescaled_image = resized_image / 255
-            image_shapes.append(rescaled_image.shape[:2])
-            image_list.append(rescaled_image)
-        pimages = np.array(image_list)
-        image_shapes = np.array(image_shapes)
-        return pimages, image_shapes
+            pimage = cv2.resize(image, 
+                                (self.model.input.shape[1].value,
+                                 self.model.input.shape[2].value), 
+                                 interpolation=cv2.INTER_CUBIC) / 255
+            pimages.append(pimage)
+            image_shapes.append(image.shape[:2])
+        return np.array(pimages), np.array(image_shapes)
