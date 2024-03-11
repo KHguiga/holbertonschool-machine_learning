@@ -167,28 +167,8 @@ class NST:
         return layer_style_cost
 
     def style_cost(self, style_outputs):
-        """
-            methode to calculate style cost for generate image
-
-            :param style_outputs: list of tf.tensor style outputs for
-                generated image
-            each layer should be weighted evenly with all weights summing to 1
-
-            :return: style cost
-        """
-        len_style_layer = len(self.style_layers)
-        if (not isinstance(style_outputs, list)
-                or len(style_outputs) != len(self.style_layers)):
-            raise TypeError(
-                "style_outputs must be a list with a length of {}"
-                .format(len_style_layer)
-            )
-
-        # uniform initialization
-        weight = 1.0 / len_style_layer
-
-        cost_total = sum([weight * self.layer_style_cost(style, target)
-                         for style, target
-                         in zip(style_outputs, self.gram_style_features)])
-
-        return cost_total
+        if type(style_outputs) is not list or len(style_outputs) != len(self.style_layers):
+            raise TypeError('style_outputs must be a list with a length of {}'.format(len(self.style_layers)))
+        J_style = tf.add_n([self.layer_style_cost(style_outputs[i], self.gram_style_features[i]) for i in range(len(style_outputs))])
+        J_style /= tf.cast(len(style_outputs), tf.float32)
+        return J_style
