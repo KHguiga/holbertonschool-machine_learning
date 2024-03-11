@@ -169,6 +169,5 @@ class NST:
     def style_cost(self, style_outputs):
         if type(style_outputs) is not list or len(style_outputs) != len(self.style_layers):
             raise TypeError('style_outputs must be a list with a length of {}'.format(len(self.style_layers)))
-        J_style = tf.add_n([self.layer_style_cost(style_outputs[i], self.gram_style_features[i]) for i in range(len(style_outputs))])
-        J_style /= tf.cast(len(style_outputs), tf.float32)
+        J_style = tf.add_n([self.layer_style_cost(style_outputs[i], self.gram_style_features[i])/ tf.cast(len(style_outputs), tf.float32) for i in range(len(style_outputs))])
         return J_style
