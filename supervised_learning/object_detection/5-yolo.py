@@ -166,7 +166,8 @@ class Yolo:
         """preprocess all images as inputs for the Darknet model"""
         pimages = []
         image_shapes = []
-        target_shape = tuple(self.model.input.shape.as_list()[1:3])
+        target_shape = (self.model.input.shape[1].value,
+                                        self.model.input.shape[2].value)
         for image in images:
             pimage = cv2.resize(image, target_shape, interpolation=cv2.INTER_CUBIC) / 255
             pimages.append(pimage)
