@@ -70,11 +70,9 @@ class NST:
                     model_outputs.append(x)
                 if layer.name == self.content_layer:
                     content_output = x
-                # layer.trainable = False
+                layer.trainable = False
         model_outputs.append(content_output)
         model = tf.keras.models.Model(vgg.input, model_outputs)
-        model.trainable = False
-        # model.layers[0].trainable = True
         self.model = model
     @staticmethod
     def gram_matrix(input_layer):
