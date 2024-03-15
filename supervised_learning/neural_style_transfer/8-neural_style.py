@@ -78,7 +78,7 @@ class NST:
         tf.keras.models.save_model(model, 'vgg_base.h5')
         model_avg = tf.keras.models.load_model('vgg_base.h5',
                                                custom_objects=custom_objects)
-
+        model_avg.trainable = False
         self.model = model_avg
     @staticmethod
     def gram_matrix(input_layer):
