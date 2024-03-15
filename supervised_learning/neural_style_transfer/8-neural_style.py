@@ -79,7 +79,6 @@ class NST:
 
         # construct model
         model_avg = tf.keras.models.Model(model.input, outputs)
-        model_avg.trainable = False
         self.model = model_avg
     @staticmethod
     def gram_matrix(input_layer):
