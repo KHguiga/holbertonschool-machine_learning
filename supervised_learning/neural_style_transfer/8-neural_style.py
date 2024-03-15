@@ -59,7 +59,6 @@ class NST:
     def load_model(self):
         vgg = tf.keras.applications.vgg19.VGG19(include_top=False, weights='imagenet')
         x = vgg.input
-        vgg.trainable = False
         model_outputs = []
         content_output = None
         for layer in vgg.layers[1:]:
@@ -74,6 +73,7 @@ class NST:
                 layer.trainable = False
         model_outputs.append(content_output)
         model = tf.keras.models.Model(vgg.input, model_outputs)
+        model.trainable = False
         self.model = model
     @staticmethod
     def gram_matrix(input_layer):
