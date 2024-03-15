@@ -64,20 +64,21 @@ class NST:
 
         modelVGG19.trainable = False
 
-        # selected layers
-        selected_layers = self.style_layers + [self.content_layer]
-
-        outputs = [modelVGG19.get_layer(name).output for name
-                   in selected_layers]
-
-        # construct model
-        model = tf.keras.models.Model(modelVGG19.input, outputs)
+        
 
         # for replace MaxPooling layer by AveragePooling layer
         custom_objects = {'MaxPooling2D': tf.keras.layers.AveragePooling2D}
-        tf.keras.models.save_model(model, 'vgg_base.h5')
-        model_avg = tf.keras.models.load_model('vgg_base.h5',
+        tf.keras.models.save_model(modelVGG19, 'vgg_base.h5')
+        model = tf.keras.models.load_model('vgg_base.h5',
                                                custom_objects=custom_objects)
+        # selected layers
+        selected_layers = self.style_layers + [self.content_layer]
+
+        outputs = [model.get_layer(name).output for name
+                   in selected_layers]
+
+        # construct model
+        model_avg = tf.keras.models.Model(model.input, outputs)
         model_avg.trainable = False
         self.model = model_avg
     @staticmethod
