@@ -57,7 +57,7 @@ class NST:
         return scaled_image
 
     def load_model(self):
-        modelVGG19 = tf.keras.applications.VGG19(
+        modelVGG19 = tf.keras.applications.vgg19.VGG19(
             include_top=False,
             weights='imagenet'
         )
