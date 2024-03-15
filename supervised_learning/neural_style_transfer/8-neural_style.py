@@ -71,7 +71,7 @@ class NST:
                    in selected_layers]
 
         # construct model
-        model = tf.keras.Model([modelVGG19.input], outputs)
+        model = tf.keras.models.Model(modelVGG19.input, outputs)
 
         # for replace MaxPooling layer by AveragePooling layer
         custom_objects = {'MaxPooling2D': tf.keras.layers.AveragePooling2D}
