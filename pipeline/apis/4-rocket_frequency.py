@@ -9,7 +9,7 @@ Useless
 import requests
 
 
-BASE_LAUNCH_URL = 'https://api.spacexdata.com/v3/launches'
+BASE_LAUNCH_URL = 'https://api.spacexdata.com/v4/launches'
 BASE_ROCKET_URL = "https://api.spacexdata.com/v4/rockets/"
 
 if __name__ == '__main__':
