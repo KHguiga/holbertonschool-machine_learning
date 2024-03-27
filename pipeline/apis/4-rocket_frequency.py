@@ -11,7 +11,9 @@ if __name__ == '__main__':
     url = 'https://api.spacexdata.com/v3/launches'
     res = requests.get(url).json()
     rockets = {}
-
+    # user doesn’t exist
+    if requests.get(url).status_code == 404:
+        print('Not found')
     for launch in res:
         rocket_name = launch['rocket']['rocket_name']
         if rocket_name in rockets:
