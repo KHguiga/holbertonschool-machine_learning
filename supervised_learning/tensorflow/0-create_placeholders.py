@@ -3,8 +3,8 @@
 Modulos that contains a function that
 returns two placeholders, x and y
 '''
-import tensorflow.compat.v1 as tf
-
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 def create_placeholders(nx, classes):
     '''
