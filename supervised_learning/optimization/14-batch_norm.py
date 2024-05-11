@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-   Batch Normalization upgraded
+   upgraded Batch Normalization
 """
 
 import tensorflow as tf
