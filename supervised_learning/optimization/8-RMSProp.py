@@ -6,6 +6,10 @@
 import tensorflow as tf
 
 
-def create_RMSProp_op(loss, alpha, beta2, epsilon):
-    op = tf.train.RMSPropOptimizer(alpha, beta2, epsilon=epsilon)
-    return op.minimize(loss)
+def create_RMSProp_op(alpha, beta2, epsilon):
+    """
+    """
+    optimizer = tf.keras.optimizers.RMSprop(learning_rate=alpha,
+                                            rho=beta2,
+                                            epsilon=epsilon)
+    return optimizer
