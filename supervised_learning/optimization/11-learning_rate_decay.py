@@ -24,4 +24,10 @@ def learning_rate_decay(alpha, decay_rate, global_step, decay_step):
     """
 
     # Calculate the decay factor
-    return alpha / (1 + decay_rate * (global_step // decay_step))
+    decay_factor = 1 / (1 + decay_rate * (global_step // decay_step))
+
+    # Update the learning rate
+    alpha_updated = alpha * decay_factor
+
+    # Return the updated learning rate
+    return alpha_updated
