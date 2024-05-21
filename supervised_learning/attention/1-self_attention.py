@@ -14,8 +14,8 @@ class SelfAttention(tf.keras.layers.Layer):
             class constructor
         :param units: integer, number hidden units in alignment model
         """
-        if not isinstance(units, int):
-            raise TypeError("units should be an integer")
+        # if not isinstance(units, int):
+        #     raise TypeError("units should be an integer")
 
         self.W = tf.keras.layers.Dense(units=units)
         self.U = tf.keras.layers.Dense(units=units)

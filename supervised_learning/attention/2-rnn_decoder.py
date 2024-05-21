@@ -20,11 +20,11 @@ class RNNDecoder(tf.keras.layers.Layer):
         :param units: integer, number hidden units in RNN cell
         :param batch: integer, batch size
         """
-        invalid_args = [arg for arg in [vocab, embedding, units, batch]
-                        if not isinstance(arg, int)]
-        if invalid_args:
-            arg_str = ", ".join([f"{arg}" for arg in invalid_args])
-            raise TypeError(f"{arg_str} Should be an integer.")
+        # invalid_args = [arg for arg in [vocab, embedding, units, batch]
+        #                 if not isinstance(arg, int)]
+        # if invalid_args:
+        #     arg_str = ", ".join([f"{arg}" for arg in invalid_args])
+        #     raise TypeError(f"{arg_str} Should be an integer.")
 
         self.units = units
         self.batch = batch
