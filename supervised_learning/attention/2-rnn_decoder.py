@@ -38,7 +38,7 @@ class RNNDecoder(tf.keras.layers.Layer):
         self.F = tf.keras.layers.Dense(units=vocab)
         self.attention = SelfAttention(self.units)
 
-    def call(self, x, s_prev, hidden_states):
+    def __call__(self, x, s_prev, hidden_states):
         """
             call function
 
