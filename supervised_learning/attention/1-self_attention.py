@@ -1,48 +1,56 @@
 #!/usr/bin/env python3
-"""Self Attention Module"""
+"""
+    Module to create Class SelfAttention
+"""
 import tensorflow as tf
 
 
 class SelfAttention(tf.keras.layers.Layer):
-    """Inherits from tensorflow.keras.layers.Layer to calculate the attention
-    for machine translation :
-
-    Class constructor def __init__(self, units):
-    units is an integer representing the number of hidden units in the
-    alignment model
-    Sets the following public instance attributes:
-        W - a Dense layer with units units, to be applied to the previous
-        decoder hidden state
-        U - a Dense layer with units units, to be applied to the encoder
-        hidden states
-        V - a Dense layer with 1 units, to be applied to the tanh of the sum of
-        the outputs of W and U
-
-    Public instance method def call(self, s_prev, hidden_states)"""
-
+    """
+        class to calculate attention ofr machine translation
+    """
     def __init__(self, units):
-        self.W = tf.keras.layers.Dense(units)
-        self.U = tf.keras.layers.Dense(units)
-        self.V = tf.keras.layers.Dense(1)
+        """
+            class constructor
+        :param units: integer, number hidden units in alignment model
+        """
+        if not isinstance(units, int):
+            raise TypeError("units should be an integer")
 
-    def __call__(self, s_prev, hidden_states):
-        """s_prev is a tensor of shape (batch, units) containing the previous
-        decoder hidden state
-        hidden_states is a tensor of shape (batch, input_seq_len, units)
-        containing the outputs of the encoder
+        super().__init__()
+        self.W = tf.keras.layers.Dense(units=units)
+        self.U = tf.keras.layers.Dense(units=units)
+        self.V = tf.keras.layers.Dense(units=1)
 
-        Returns: context, weights
-            context is a tensor of shape (batch, units) that contains the
-            context vector for the decoder
-            weights is a tensor of shape (batch, input_seq_len, 1) that
-            contains the attention weights"""
-        query_with_time_axis = tf.expand_dims(s_prev, 1)
-        score = self.V(tf.nn.tanh(self.W(query_with_time_axis) +
-                                  self.U(hidden_states)))
+    def call(self, s_prev, hidden_states):
+        """
+            call method
 
-        attention_weights = tf.nn.softmax(score, axis=1)
+        :param s_prev: tensor, shape(batch, units) prev decoder hidden state
+        :param hidden_states: tensor, shape(batch, input_seq_len, units),
+            outputs of the encoder
 
-        context = attention_weights * hidden_states
+        :return: context, weights
+            context: tensor, shape(batch, units) context vector for decoder
+            weights: tensor, shape(batch, input_seq_len, units),
+                attention weights
+        """
+        # calculate score with previous decoder hidden state
+        s_prev_score = self.W(s_prev)
+        s_prev_score = tf.expand_dims(s_prev_score, axis=1)
+
+        # calculate score with encoder hidden states
+        encoder_score = self.U(hidden_states)
+
+        # calculate attention scores
+        scores = tf.nn.tanh(s_prev_score + encoder_score)
+        scores = self.V(scores)
+
+        # attention weights
+        att_weights = tf.nn.softmax(scores, axis=1)
+
+        # context vector
+        context = att_weights * hidden_states
         context = tf.reduce_sum(context, axis=1)
 
-        return context, attention_weights
+        return context, att_weights
