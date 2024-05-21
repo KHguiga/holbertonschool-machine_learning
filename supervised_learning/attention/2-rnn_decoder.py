@@ -53,13 +53,14 @@ class RNNDecoder(tf.keras.layers.Layer):
                 vector in the target vocabulary
             s: tensor, shape(batch, units) new decoder hidden state
         """
-        # embedding vector
-        x = self.embedding(x)
         
         attention = SelfAttention(self.units)
         # context and weigh
         context, _ = attention(s_prev, hidden_states)
-
+        
+        # embedding vector
+        x = self.embedding(x)
+        
         # concatenate context with embedding vector
         context = tf.expand_dims(context, 1)
         context_concat = tf.concat([context, x], axis=-1)
