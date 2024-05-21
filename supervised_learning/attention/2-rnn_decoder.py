@@ -36,7 +36,7 @@ class RNNDecoder(tf.keras.layers.Layer):
             return_state=True,
             recurrent_initializer="glorot_uniform")
         self.F = tf.keras.layers.Dense(units=vocab)
-        self.attention = SelfAttention(self.units)
+        
 
     def __call__(self, x, s_prev, hidden_states):
         """
@@ -55,9 +55,10 @@ class RNNDecoder(tf.keras.layers.Layer):
         """
         # embedding vector
         x = self.embedding(x)
-
+        
+        attention = SelfAttention(self.units)
         # context and weigh
-        context, att_weights = self.attention(s_prev, hidden_states)
+        context, _ = attention(s_prev, hidden_states)
 
         # concatenate context with embedding vector
         context = tf.expand_dims(context, 1)
