@@ -26,7 +26,6 @@ class RNNDecoder(tf.keras.layers.Layer):
             arg_str = ", ".join([f"{arg}" for arg in invalid_args])
             raise TypeError(f"{arg_str} Should be an integer.")
 
-        super().__init__()
         self.units = units
         self.batch = batch
         self.embedding = tf.keras.layers.Embedding(input_dim=vocab,
