@@ -36,9 +36,9 @@ class SelfAttention(tf.keras.layers.Layer):
                 attention weights
         """
         # calculate score with previous decoder hidden state
-        s_prev_score = self.W(s_prev)
-        s_prev_score = tf.expand_dims(s_prev_score, axis=1)
-
+        
+        s_prev_score = tf.expand_dims(s_prev, axis=1)
+        s_prev_score = self.W(s_prev_score)
         # calculate score with encoder hidden states
         encoder_score = self.U(hidden_states)
 
