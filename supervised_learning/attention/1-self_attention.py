@@ -17,7 +17,6 @@ class SelfAttention(tf.keras.layers.Layer):
         if not isinstance(units, int):
             raise TypeError("units should be an integer")
 
-        super().__init__()
         self.W = tf.keras.layers.Dense(units=units)
         self.U = tf.keras.layers.Dense(units=units)
         self.V = tf.keras.layers.Dense(units=1)
