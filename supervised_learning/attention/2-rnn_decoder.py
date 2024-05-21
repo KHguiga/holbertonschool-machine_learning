@@ -1,63 +1,74 @@
 #!/usr/bin/env python3
-"""RNN Decoder Module"""
+"""
+    Module to create Class RNN Decoder
+"""
 import tensorflow as tf
 SelfAttention = __import__('1-self_attention').SelfAttention
 
 
 class RNNDecoder(tf.keras.layers.Layer):
-    """Inherits from tensorflow.keras.layers.Layer to decode for machine
-    translation:
-
-    Class constructor def __init__(self, vocab, embedding, units, batch):
-        vocab is an integer representing the size of the input vocabulary
-        embedding is an integer representing the dimensionality of the
-        embedding vector
-        units is an integer representing the number of hidden units in the RNN
-        cell
-        batch is an integer representing the batch size
-        Sets the following public instance attributes:
-            embedding - a keras Embedding layer that converts words from the
-            vocabulary into an embedding vector
-            gru - a keras GRU layer with units units
-                Should return both the full sequence of outputs as well as the
-                last hidden state
-                Recurrent weights should be initialized with glorot_uniform
-            F - a Dense layer with vocab units
-
-    Public instance method def call(self, x, initial)"""
+    """
+        class to create RNN decoder for machine translation
+    """
 
     def __init__(self, vocab, embedding, units, batch):
+        """
+            class constructor
+
+        :param vocab: integer, size of output vocabulary
+        :param embedding: integer, dimensionality of embedding vector
+        :param units: integer, number hidden units in RNN cell
+        :param batch: integer, batch size
+        """
+        invalid_args = [arg for arg in [vocab, embedding, units, batch]
+                        if not isinstance(arg, int)]
+        if invalid_args:
+            arg_str = ", ".join([f"{arg}" for arg in invalid_args])
+            raise TypeError(f"{arg_str} Should be an integer.")
+
+        super().__init__()
         self.units = units
+        self.batch = batch
         self.embedding = tf.keras.layers.Embedding(input_dim=vocab,
                                                    output_dim=embedding)
-        self.gru = tf.keras.layers.GRU(units, return_sequences=True,
-                                       return_state=True,
-                                       recurrent_initializer='glorot_uniform')
-        self.F = tf.keras.layers.Dense(vocab)
+        self.gru = tf.keras.layers.GRU(
+            units=units,
+            return_sequences=True,
+            return_state=True,
+            recurrent_initializer="glorot_uniform")
+        self.F = tf.keras.layers.Dense(units=vocab)
+        self.attention = SelfAttention(self.units)
 
-    def __call__(self, x, s_prev, hidden_states):
-        """x is a tensor of shape (batch, 1) containing the previous word in
-        the target sequence as an index of the target vocabulary
-        s_prev is a tensor of shape (batch, units) containing the previous
-        decoder hidden state
-        hidden_states is a tensor of shape (batch, input_seq_len, units)
-        containing the outputs of the encoder
+    def call(self, x, s_prev, hidden_states):
+        """
+            call function
 
-        Returns: y, s
-        y is a tensor of shape (batch, vocab) containing the output word as a
-        one hot vector in the target vocabulary
-        s is a tensor of shape (batch, units) containing the new decoder hidden
-        state"""
-        attention = SelfAttention(self.units)
-        context, _ = attention(s_prev, hidden_states)
+        :param x: tensor, shape(batch,1), previous word in the target
+        :param s_prev: tensor, shape(batch, units) previous decoder
+            hidden state
+        :param hidden_states: tensor, shape(batch,input_seq_len,units)
+             outputs of the encoder
 
+        :return: y, s
+            y: tensor, shape(batch, vocab) output word as a one hot
+                vector in the target vocabulary
+            s: tensor, shape(batch, units) new decoder hidden state
+        """
+        # embedding vector
         x = self.embedding(x)
 
-        context_x = tf.concat([tf.expand_dims(context, 1), x], axis=-1)
+        # context and weigh
+        context, att_weights = self.attention(s_prev, hidden_states)
 
-        outputs, s = self.gru(context_x)
-        outputs = tf.reshape(outputs, (-1, outputs.shape[2]))
+        # concatenate context with embedding vector
+        context = tf.expand_dims(context, 1)
+        context_concat = tf.concat([context, x], axis=-1)
 
-        y = self.F(outputs)
+        outputs, hidden_state = self.gru(context_concat)
 
-        return y, s
+        # supress dim=1
+        new_outputs = tf.reshape(outputs,  (-1, outputs.shape[2]))
+
+        y = self.F(new_outputs)
+
+        return y, hidden_state
