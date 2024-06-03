@@ -57,7 +57,7 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
             for c in range(out_c):
                 # crop A_prev_pad by filter, the sum, 
 
-                x = np.multiply(A_prev_pad[:,i:i+kh, j:j+kw,0:c_prev], W[: ,: ,0:c_prev,c])
+                x = np.multiply(A_prev_pad[:,i*sh:i*sh+kh, j*sw:j*sw+kw,:], W[: ,: ,:,c])
                 # print("x before sum",x.shape)
                 x = np.sum(x, axis=(1,2,3)) 
                 # print("x after",x.shape)
