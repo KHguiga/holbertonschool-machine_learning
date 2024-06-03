@@ -35,8 +35,8 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
         ph = 0
         pw = 0
     if padding == 'same':
-        ph = int((h_prev * (sh - 1)  + kh - sh) / 2)
-        pw = int((w_prev * (sw - 1)  + kw - sw) / 2)
+        ph = int((sh * (h_prev - 1)  + kh - sh) / 2)
+        pw = int((sw * (w_prev - 1)  + kw - sw) / 2)
 
     # out contains the output of convolution layer, careful may gives wrog out_h and out_w
     out_h = int((h_prev + 2 * ph - kh)/ sh + 1)
