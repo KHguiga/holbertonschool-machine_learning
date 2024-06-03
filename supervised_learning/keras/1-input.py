@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-    Sequential
+    Input
 """
 
 import tensorflow.keras as K
- 
 
 
 def build_model(nx, layers, activations, lambtha, keep_prob):
@@ -19,15 +18,20 @@ def build_model(nx, layers, activations, lambtha, keep_prob):
 
         :return: keras model
     """
-    model = K.Sequential()
+    inputs = K.Input(shape=(nx,))
 
+    x = inputs
     for i in range(len(layers)):
-        model.add(K.layers.Dense(layers[i],
-                  activation=activations[i],
-                  kernel_regularizer=K.regularizers.L2(lambtha),
-                  input_dim=nx))
-        # apply dropout except on output layer
+        # add Dense layer
+        x = K.layers.Dense(layers[i],
+                           activation=activations[i],
+                           kernel_regularizer=K.regularizers.L2(lambtha))(x)
+
+        # apply Dropout except last layer
         if i != len(layers) - 1 and keep_prob is not None:
-            model.add(K.layers.Dropout(1-keep_prob))
+            x = K.layers.Dropout(1 - keep_prob)(x)
+
+    # create model
+    model = K.Model(inputs, x)
 
     return model
