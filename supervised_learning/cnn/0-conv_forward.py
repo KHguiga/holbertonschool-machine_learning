@@ -61,7 +61,7 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
                 # print("x before sum",x.shape)
                 x = np.sum(x, axis=(1,2,3)) 
                 # print("x after",x.shape)
-                x = activation(x+ b[0,0,0,c])
+                
                 conv[:, i, j, c] = x
-                    
-    return conv
+    A = activation(conv+ b)         
+    return A
