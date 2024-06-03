@@ -9,8 +9,8 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
 
     if padding == 'same':
         nh, nw = h, w
-        ph  = int((fh + (sh * (h - 1)) - h) / 2 + 0.5)
-        pw  = int((fw + (sw * (w - 1)) - w) / 2 + 0.5)
+        ph  = int((fh + (sh * (h - 1)) - h) / 2)
+        pw  = int((fw + (sw * (w - 1)) - w) / 2)
         A_prev = np.pad(A_prev, ((0, 0), (ph, ph), (pw, pw), (0, 0)), 'constant')
     elif padding == 'valid':
         nh = ((h - fh) // sh) + 1
