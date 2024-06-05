@@ -25,6 +25,7 @@ def lenet5(x, y):
     a tensor for the accuracy of the network
     """
     init = tf.keras.initializers.VarianceScaling(scale=2.0)
+    relu = tf.nn.relu
 
     # Convolutional layer with 6 kernels of shape 5x5 with same padding
     conv1 = tf.layers.conv2d(
@@ -32,7 +33,7 @@ def lenet5(x, y):
         filters=6,
         kernel_size=5,
         padding="same",
-        activation=tf.nn.relu,
+        activation=relu,
         kernel_initializer=init,
     )
 
@@ -45,7 +46,7 @@ def lenet5(x, y):
         filters=16,
         kernel_size=5,
         padding="valid",
-        activation=tf.nn.relu,
+        activation=relu,
         kernel_initializer=init,
     )
 
@@ -57,12 +58,12 @@ def lenet5(x, y):
 
     # Fully connected layer with 120 nodes
     fc1 = tf.layers.dense(
-        flat, units=120, activation=tf.nn.relu, kernel_initializer=init
+        flat, units=120, activation=relu, kernel_initializer=init
     )
 
     # Fully connected layer with 84 nodes
     fc2 = tf.layers.dense(fc1, units=84,
-                          activation=tf.nn.relu, kernel_initializer=init)
+                          activation=relu, kernel_initializer=init)
 
     # Fully connected softmax output layer with 10 nodes
     softmax = tf.layers.dense(
