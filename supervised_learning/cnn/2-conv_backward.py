@@ -47,12 +47,15 @@ def conv_backward(dZ, A_prev, W, b, padding="same", stride=(1, 1)):
     dW = np.zeros_like(W)
     db = np.sum(dZ, axis=(0, 1, 2), keepdims=True)
 
+    
+
     for i in range(h_new):
         for j in range(w_new):
             for k in range(c_new):
-                slice_A_prev = A_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :]
                 dA_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :] += W[..., k] * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis]
-                dW[..., k] += np.sum(slice_A_prev * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis], axis=0)
+                
+                slice_A_prev = A_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :]
+                dW[..., k] += slice_A_prev * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis]
 
     if padding == 'same':
         dA_prev = dA_prev_pad[:, ph:-ph, pw:-pw, :]
