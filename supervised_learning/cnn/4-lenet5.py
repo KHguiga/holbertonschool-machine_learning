@@ -65,13 +65,18 @@ def lenet5(x, y):
     fc2 = tf.layers.dense(fc1, units=84,
                           activation=relu, kernel_initializer=init)
 
+
+    FC3 = tf.layers.Dense(10, kernel_initializer=init)
+    A8 = FC3(fc2)
+    softmax = tf.nn.softmax(A8)
+    loss = tf.losses.softmax_cross_entropy(y, A8)
     # Fully connected softmax output layer with 10 nodes
-    softmax = tf.layers.dense(
-        fc2, units=10, activation=tf.nn.softmax, kernel_initializer=init
-    )
+    # softmax = tf.layers.dense(
+    #     fc2, units=10, activation=tf.nn.softmax, kernel_initializer=init
+    # )
 
     # Loss
-    loss = tf.losses.softmax_cross_entropy(y, softmax)
+    # loss = tf.losses.softmax_cross_entropy(y, softmax)
 
     # Training operation
     train_op = tf.train.AdamOptimizer().minimize(loss)
