@@ -47,15 +47,32 @@ def conv_backward(dZ, A_prev, W, b, padding="same", stride=(1, 1)):
     dW = np.zeros_like(W)
     db = np.sum(dZ, axis=(0, 1, 2), keepdims=True)
 
-    
+    for i in range(m):
+        for h in range(h_new):
+            for w in range(w_new):
+                # for each filter
+                for f in range(c_new):
+                    # define vertical/horizontal start and end
+                    v_start = h * sh
+                    v_end = v_start + kh
+                    h_start = w * sw
+                    h_end = h_start + kw
 
-    for i in range(h_new):
-        for j in range(w_new):
-            for k in range(c_new):
-                dA_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :] += W[..., k] * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis]
+                    # update derivative
+                    dA_prev_pad[i, v_start:v_end, h_start:h_end, :]\
+                        += W[:, :, :, f] * dZ[i, h, w, f]
+                    
+                    dW[:, :, :, f] += (A_prev_pad[i, v_start:v_end,
+                                                  h_start:h_end, :]
+                                       * dZ[i, h, w, f])
+
+    # for i in range(h_new):
+    #     for j in range(w_new):
+    #         for k in range(c_new):
+    #             dA_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :] += W[..., k] * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis]
                 
-                slice_A_prev = A_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :]
-                dW[..., k] += slice_A_prev * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis]
+    #             slice_A_prev = A_prev_pad[:, i*sh:i*sh+kh, j*sw:j*sw+kw, :]
+    #             dW[..., k] += np.sum(slice_A_prev * dZ[:, i, j, k, np.newaxis, np.newaxis, np.newaxis], axis=0)
 
     if padding == 'same':
         dA_prev = dA_prev_pad[:, ph:-ph, pw:-pw, :]
