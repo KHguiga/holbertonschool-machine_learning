@@ -186,7 +186,7 @@ of shape {content_shape}")
 
         if generated_image.shape != content_shape:
             raise TypeError(f"generated_image must be a tensor \
-185 of shape {content_shape}")
+of shape {content_shape}")
         preprocessed = tf.keras.applications.vgg19.preprocess_input(generated_image * 255)
         generated_features = self.model(preprocessed)
         generated_style = generated_features[:-1]
