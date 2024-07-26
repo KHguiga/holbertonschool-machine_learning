@@ -21,5 +21,5 @@ def pca(X, ndim):
         ndim = d
     Ur = U[:, 0:ndim]
     Sr = np.diag(S[0:ndim])
-    T = Sr @ Ur
+    T = Ur @ Sr
     return T
