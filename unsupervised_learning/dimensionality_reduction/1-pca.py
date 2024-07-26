@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
+"""
+PCA v2
+"""
 
 import numpy as np
 
+
 def pca(X, ndim):
-    """
-    Takes X a matrix,
-    return Tr( reduction score)
-    """
-    n = X.shape[0]  # number of data points
-    d = X.shape[1]  # number of dimensions
+    # Center data (X) by subtracting the mean of each feature
+    data_centered = X - np.mean(X, axis=0)
 
-    # normalize X
-    X = X - np.mean(X, axis=0)
+    # Compute the SVD of the data matrix
+    U, S, Vt = np.linalg.svd(data_centered, full_matrices=False)
 
-    # decompose X into SVD
-    U, S, _ = np.linalg.svd(X, full_matrices=False)
+    # Transposed (for shape(d, nd)) top ndim rows of Vt
+    W = Vt[:ndim].T
 
-    # reduction dimension r
-    if ndim >= d:
-        ndim = d
-    Ur = U[:, 0:ndim]
-    Sr = np.diag(S[0:ndim])
-    T = Ur @ Sr
-    return T
+    # Return transformed data in new dimensions/space
+    return data_centered @ W
