@@ -26,10 +26,8 @@ def kmeans(X, k, iterations=1000):
                                  high=np.max(X, axis=0), size=(k, d))
 
     for i in range(iterations):
-        Xe = np.expand_dims(X, axis=1)
-        Ce = np.expand_dims(centroid, axis=0)
-        D = np.sum(np.square(Xe - Ce), axis=2)
-        clss = np.argmin(D, axis=1)
+        distances = np.linalg.norm(X[:, np.newaxis] - centroid, axis=2)
+        clss = np.argmin(distances, axis=1)
 
         new_centroid = np.copy(centroid)
 
