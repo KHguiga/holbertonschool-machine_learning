@@ -1,38 +1,52 @@
 #!/usr/bin/env python3
-
+"""
+Project Clusters
+By Ced+
+"""
 import numpy as np
 
-def classes(X, C):
-    Xe = np.expand_dims(X, axis=1)
-    Ce = np.expand_dims(C, axis=0)
-    D = np.sum(np.square(Xe - Ce), axis=2)
-    clss = np.argmin(D, axis=1)
-    return clss
 
 def kmeans(X, k, iterations=1000):
-    """performs kmeans on a dataset"""
-    if type(X) is not np.ndarray or X.ndim != 2:
-        return None, None
-    if type(k) is not int or int(k) != k or k < 1:
-        return None, None
-    if type(iterations) is not int or int(iterations) != iterations or iterations < 1:
-        return None, None
-    _, d = X.shape
-    mins = np.min(X, axis=0)
-    maxs = np.max(X, axis=0)
+    """
+    Calculate the centroid by K mean algorithm
+    return  the K centroids and the clss
+    """
 
-    C = np.random.uniform(mins, maxs, size=(k, d))
-    nC = C.copy()
-    for _ in range(iterations):
-        clss = classes(X, C)
-        for i in range(k):
-            indices = np.argwhere(clss == i).reshape(-1)
-            if X[indices].shape[0] > 0:
-                nC[i] = np.mean(X[indices], axis=0)
+    if not isinstance(X, np.ndarray) or len(X.shape) != 2:
+        return None, None
+    if not isinstance(k, int) or k <= 0:
+        return None, None
+    if not isinstance(iterations, int) or iterations < 1:
+        return None, None
+
+    n, d = X.shape
+
+    # initialize random k-centroids
+    centroid = np.random.uniform(low=np.min(X, axis=0),
+                                 high=np.max(X, axis=0), size=(k, d))
+
+    for i in range(iterations):
+        Xe = np.expand_dims(X, axis=1)
+        Ce = np.expand_dims(centroid, axis=0)
+        D = np.sum(np.square(Xe - Ce), axis=2)
+        clss = np.argmin(D, axis=1)
+
+        new_centroid = np.copy(centroid)
+
+        for j in range(k):
+            # new centroid
+            if len(np.where(clss == j)[0]) == 0:
+                centroid[j] = np.random.uniform(np.min(X, axis=0),
+                                                np.max(X, axis=0), d)
+
             else:
-                nC[i] = np.random.uniform(mins, maxs)
-        if np.array_equal(nC, C):
+                centroid[j] = np.mean(X[np.where(clss == j)], axis=0)
+        # if centroid don't change, break
+        if np.array_equal(new_centroid, centroid):
+
             break
-        C = nC.copy()
-    clss = classes(X, C)
-    return C, clss
+
+    distances = np.linalg.norm(X[:, np.newaxis] - centroid, axis=2)
+    clss = np.argmin(distances, axis=1)
+
+    return centroid, clss
