@@ -51,8 +51,7 @@ class Node:
         lines = text.split("\n")
         new_text = "    +--" + lines[0] + "\n"
         for x in lines[1:]:
-            if x.strip():  # Only add the prefix if the line is not empty
-                new_text += ("    |  " + x) + "\n"
+            new_text += ("    |  " + x) + "\n"
 
         return new_text
 
@@ -62,8 +61,7 @@ class Node:
         lines = text.split("\n")
         new_text = "    +--" + lines[0] + "\n"
         for x in lines[1:]:
-            if x.strip():  # Only add the prefix if the line is not empty
-                new_text += ("       " + x) + "\n"
+            new_text += ("       " + x) + "\n"
 
         return new_text
 
@@ -73,13 +71,13 @@ class Node:
         feature = self.feature
         threshold = self.threshold
         if self.is_root:
-            a = self.left_child_add_prefix(f"{self.left_child}")
-            b = self.right_child_add_prefix(f"{self.right_child}")
+            a = self.left_child_add_prefix(f"{self.left_child}".rstrip("\n"))
+            b = self.right_child_add_prefix(f"{self.right_child}".rstrip("\n"))
             return f"root [feature={feature}, threshold={threshold}]\n" \
                    f"{a}{b}"
         else:
-            a = self.left_child_add_prefix(f"{self.left_child}")
-            b = self.right_child_add_prefix(f"{self.right_child}")
+            a = self.left_child_add_prefix(f"{self.left_child}".rstrip("\n"))
+            b = self.right_child_add_prefix(f"{self.right_child}".rstrip("\n"))
             return f"-> node [feature={feature}, threshold={threshold}]\n" \
                    f"{a}{b}"
 
