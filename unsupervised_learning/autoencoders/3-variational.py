@@ -81,7 +81,7 @@ def autoencoder(input_dims, hidden_layers, latent_dims):
 
     # Create the full autoencoder model
 
-    outputs = decoder(outputs[0])
+    outputs = decoder(encoder(encoder_inputs)[0])
 
     auto = keras.models.Model(inputs=encoder_inputs, outputs=outputs)
 
