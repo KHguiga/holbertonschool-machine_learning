@@ -1,73 +1,101 @@
 #!/usr/bin/env python3
-"""Variational Autoencoder Module"""
+"""This modlue contains a function that creates a variational autoencoder"""
 import tensorflow.keras as keras
 
 
 def autoencoder(input_dims, hidden_layers, latent_dims):
-    """Creates a variational autoencoder:
 
-    input_dims is an integer containing the dimensions of the model input
-    hidden_layers is a list containing the number of nodes for each hidden
-    layer in the encoder, respectively
-    the hidden layers should be reversed for the decoder
-    latent_dims is an integer containing the dimensions of the latent space
-    representation
+    encoder_inputs = keras.Input(shape=(input_dims,))
 
-    Returns: encoder, decoder, auto
-    encoder is the encoder model, which should output the latent
-    representation, the mean, and the log variance, respectively
-    decoder is the decoder model
-    auto is the full autoencoder model
-    The autoencoder model should be compiled using adam optimization and binary
-    cross-entropy loss
-    All layers should use a relu activation except for the mean and log
-    variance layers in the encoder, which should use None, and the last layer
-    in the decoder, which should use sigmoid
-    """
-    encoder_input = keras.layers.Input(shape=(input_dims,))
-    encoder_output = encoder_input
-    for units in hidden_layers:
-        encoder_output = keras.layers.Dense(
-            units, activation='relu')(encoder_output)
+    # Create the encoder layers
+    for idx, units in enumerate(hidden_layers):
+        # Add dense layers with the relu activation function
+        layer = keras.layers.Dense(units=units, activation="relu")
+        if idx == 0:
+            # If it is the first layer, set the input
+            outputs = layer(encoder_inputs)
 
-    mean = keras.layers.Dense(latent_dims)(encoder_output)
-    log_sigma = keras.layers.Dense(latent_dims)(encoder_output)
+        else:
+            # If it is not the first layer, set the
+            # output of the previous layer
+            outputs = layer(outputs)
 
+    # crerate a mean layer
+    layer = keras.layers.Dense(units=latent_dims)
+
+    # Create the mean layer
+    mean = layer(outputs)
+
+    layer = keras.layers.Dense(units=latent_dims)
+
+    log_variation = layer(outputs)
+
+
+    # Create a sampling function to sample from the mean and log variation
     def sampling(args):
-        z_mean, z_log_sigma = args
-        m = keras.backend.shape(z_mean)[0]
-        n = keras.backend.int_shape(z_mean)[1]
-        epsilon = keras.backend.random_normal(shape=(m,n), mean=0., stddev=1.)
-        return z_mean + keras.backend.exp(z_log_sigma) * epsilon
+        """This function samples from the mean and log variation
+        Args:
+            args: list containing the mean and log variation
+        Returns: sampled tensor
+        """
+        # Get the mean and log variation from the arguments
+        mean, log_variation = args
 
-    latent_space = keras.layers.Lambda(sampling)([mean, log_sigma])
+        # Generate a random tensor
+        epsilon = keras.backend.random_normal(shape=keras.backend.shape(mean))
+
+        # Return the sampled tensor
+        return mean + keras.backend.exp(log_variation * 0.5) * epsilon
+
+    # Use a keras layer to wrap the sampling function
+    z = keras.layers.Lambda(sampling, output_shape=(latent_dims,))(
+        [mean, log_variation]
+    )
+
+    # Create the encoder model
     encoder = keras.models.Model(
-        encoder_input, [latent_space, mean, log_sigma])
+        inputs=encoder_inputs, outputs=[z, mean, log_variation]
+    )
 
-    decoder_input = keras.layers.Input(shape=(latent_dims,))
-    decoder_output = decoder_input
-    for units in reversed(hidden_layers):
-        decoder_output = keras.layers.Dense(
-            units, activation='relu')(decoder_output)
+    # Define the decoder model
+    decoder_inputs = keras.Input(shape=(latent_dims,))
+    for idx, units in enumerate(reversed(hidden_layers)):
+        # Create a Dense layer with relu activation
+        layer = keras.layers.Dense(units=units, activation="relu")
 
-    decoder_output = keras.layers.Dense(
-        input_dims, activation='sigmoid')(decoder_output)
-    decoder = keras.models.Model(decoder_input, decoder_output)
+        if idx == 0:
+            # if it is the first layer, set the input
+            outputs = layer(decoder_inputs)
 
-    autoencoder = keras.models.Model(
-        encoder_input, decoder(encoder(encoder_input)[0]))
+        else:
+            outputs = layer(outputs)
+
+    # Create the output layer for the decoder modle
+    # using sigmoid activation function
+    layer = keras.layers.Dense(units=input_dims, activation="sigmoid")
+
+    outputs = layer(outputs)
+
+    # Create the decoder model
+    decoder = keras.models.Model(inputs=decoder_inputs, outputs=outputs)
+
+    # Create the full autoencoder model
+
+    outputs = decoder(outputs[0])
+
+    auto = keras.models.Model(inputs=encoder_inputs, outputs=outputs)
 
     reconstruction_loss = keras.losses.binary_crossentropy(
-        encoder_input, decoder(encoder(encoder_input)[0])) * input_dims
+        encoder_inputs, outputs) * input_dims
 
-    kl_loss = 1 + log_sigma - \
-        keras.backend.square(mean) - keras.backend.exp(log_sigma)
+    kl_loss = 1 + log_variation - \
+        keras.backend.square(mean) - keras.backend.exp(log_variation)
     kl_loss = keras.backend.sum(kl_loss, axis=-1)
     kl_loss *= -0.5
 
     vae_loss = keras.backend.mean(reconstruction_loss + kl_loss)
 
-    autoencoder.add_loss(vae_loss)
-    autoencoder.compile(optimizer='adam')
+    auto.add_loss(vae_loss)
+    auto.compile(optimizer='adam')
 
-    return encoder, decoder, autoencoder
+    return encoder, decoder, auto
