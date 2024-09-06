@@ -1,109 +1,67 @@
 #!/usr/bin/env python3
-"""This module contains the GRUCell class"""
+"""GRU Cell Module"""
 import numpy as np
 
 
 class GRUCell:
-    """This class represents a GRU unit"""
+    """Represents a gated recurrent unit:
+
+    class constructor def __init__(self, i, h, o):
+    i is the dimensionality of the data
+    h is the dimensionality of the hidden state
+    o is the dimensionality of the outputs
+    Creates the public instance attributes Wz, Wr, Wh, Wy, bz, br, bh, by that
+    represent the weights and biases of the cell
+    Wzand bz are for the update gate
+    Wrand br are for the reset gate
+    Whand bh are for the intermediate hidden state
+    Wyand by are for the output
+    The weights should be initialized using a random normal distribution in the
+    order listed above
+    The weights will be used on the right side for matrix multiplication
+    The biases should be initialized as zeros
+
+    public instance method def forward(self, h_prev, x_t): that performs
+    forward propagation for one time step"""
+
     def __init__(self, i, h, o):
-        """Class constructor
-        Args:
-            i: is the dimensionality of the data
-            h: is the dimensionality of the hidden state
-            o: is the dimensionality of the outputs
-        """
-        # initialize Wz and bz
-        # Wz shape (i + h, h) and bz shape (1, h)
-        # Wz: This weight matrix is used to combine the input data and
-        # the previous hidden state
-        # to compute the new hidden state. The new hidden state is then
-        # used to compute the output.
-        # This is the update gate weight matrix.
-        self.Wz = np.random.normal(size=(i + h, h))
-        self.bz = np.zeros((1, h))
-
-        # Initialize Wr and br
-        # Wr: Weight matrix for the reset gate,
-        # combining input data and previous hidden state
-        # br: Bias for the reset gate
-        self.Wr = np.random.normal(size=(i + h, h))
-        self.br = np.zeros((1, h))
-
-        # Initialize Wh and bh
-        # Wh: Weight matrix for the candidate hidden state,
-        # combining input data and previous hidden state
-        # bh: Bias for the candidate hidden state
-        self.Wh = np.random.normal(size=(i + h, h))
-        self.bh = np.zeros((1, h))
-
-        # Initialize Wy and by
-        # Wy: Weight matrix for the output, combining the
-        # hidden state to produce the output
-        # by: Bias for the output
+        self.Wz = np.random.normal(size=(i+h, h))
+        self.Wr = np.random.normal(size=(i+h, h))
+        self.Wh = np.random.normal(size=(i+h, h))
         self.Wy = np.random.normal(size=(h, o))
+        self.bz = np.zeros((1, h))
+        self.br = np.zeros((1, h))
+        self.bh = np.zeros((1, h))
         self.by = np.zeros((1, o))
 
     def forward(self, h_prev, x_t):
-        """This method calculates the forward propagation for one time step
-        Args:
-            h_prev: numpy.ndarray of shape (m, h) containing the previous
-                    hidden state
-            x_t: numpy.ndarray of shape (m, i) that contains the data input
-                 for the cell
+        """Performs forward propagation for one time step
+        x_t is a numpy.ndarray of shape (m, i) that contains the data input for
+        the cell
+        m is the batch size for the data
+        h_prev is a numpy.ndarray of shape (m, h) containing the previous
+        hidden state
+        The output of the cell should use a softmax activation function
+
         Returns: h_next, y
-                 h_next: the next hidden state
-                 y: the output of the cell
-        """
-        # Concatenate the previous hidden state (h_prev) and the input
-        # data (x_t)
-        # This combined input will be used to compute the gates and the
-        # candidate hidden state
-        # axis=1 to concatenate horizontally
-        inputs = np.concatenate((h_prev, x_t), axis=1)
+        h_next is the next hidden state
+        y is the output of the cell"""
 
-        # Create the update gate and reset gate
-        # The update gate (z_t) determines how much of the previous
-        # hidden state to retain
-        update = self.sigmoid(np.matmul(inputs, self.Wz) + self.bz)
+        def softmax(x):
+            """Compute softmax activation function"""
+            return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
 
-        # The reset gate (r_t) determines how much of the previous
-        # hidden state to forget
-        reset = self.sigmoid(np.matmul(inputs, self.Wr) + self.br)
+        h_x = np.concatenate((h_prev, x_t), axis=1)
 
-        # Update the inputs (h_prev) with the (rest) reset gate
-        # and concatenate with the input data (x_t)
-        # axis=1 to concatenate horizontally
-        updated_input = np.concatenate((reset * h_prev, x_t), axis=1)
+        r_t = 1 / (1 + np.exp(-(np.dot(h_x, self.Wr) + self.br)))
 
-        # Compute the new hidden state of the cell
-        # h_r is shape (m, h)
-        h_r = np.tanh(np.matmul(updated_input, self.Wh) + self.bh)
+        z_t = 1 / (1 + np.exp(-(np.dot(h_x, self.Wz) + self.bz)))
 
-        # Calculate the new hidden state of the cell
-        # after factroing in the update gate
-        # h_next is shape (m, h)
-        h_next = update * h_r + (1 - update) * h_prev
+        rh_x = np.concatenate((r_t * h_prev, x_t), axis=1)
 
-        # Calculate the output of the cell
-        # taking in account the new hidden state
-        y = self.softmax(np.matmul(h_next, self.Wy) + self.by)
+        h_tilde = np.tanh(np.dot(rh_x, self.Wh) + self.bh)
+        h_next = (1 - z_t) * h_prev + z_t * h_tilde
 
-        return h_next, y
+        output_t = softmax(np.dot(h_next, self.Wy) + self.by)
 
-    def sigmoid(self, x):
-        """This method calculates the sigmoid function
-        Args:
-            x: numpy.ndarray
-        Returns: the sigmoid function of x
-        """
-        return 1 / (1 + np.exp(-x))
-
-    def softmax(self, x):
-        """This method calculates the softmax function
-        Args:
-            x: numpy.ndarray
-        Returns: the softmax function of x
-        """
-        max_x = np.amax(x, 1).reshape(x.shape[0], 1)  # Get the row-wise maximum
-        e_x = np.exp(x - max_x)  # For stability
-        return e_x / e_x.sum(axis=1, keepdims=True)
+        return h_next, output_t
