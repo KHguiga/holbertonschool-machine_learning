@@ -18,9 +18,11 @@ def td_lambtha(env, V, policy, lambtha,
             s_new, reward, terminated, truncated, _ = env.step(action)
             delta = reward + (gamma * V[s_new]) - V[s]
             E[s] += 1
-            V = V + alpha * delta * E
 
             E *= gamma * lambtha
+            V = V + alpha * delta * E
+
+            
             if terminated or truncated:
                 break
             s = s_new
