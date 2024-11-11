@@ -32,7 +32,6 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000,
             E[s_prev, action_prev] += 1
             Q = Q + (alpha * delta * E)
             E = E * gamma * lambtha
-            
             if terminated or truncated:
                 break
             s_prev = s
