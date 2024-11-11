@@ -14,7 +14,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
     # Initialize eligibility traces, Q is given
     n_states, n_actions = Q.shape
     E = np.zeros((n_states, n_actions))
-
+    max_epsilon = epsilon
     for episode in range(episodes):
         """
         reset the environment and sample one episode
@@ -65,7 +65,8 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             state, action = next_state, next_action
 
         # Decay epsilon after each episode
-        epsilon = max(min_epsilon, epsilon * np.exp(-epsilon_decay * episode))
+        exp = np.exp(-epsilon_decay * episode)
+        epsilon = min_epsilon + (max_epsilon - min_epsilon) * exp
     
     return Q
 
@@ -75,6 +76,6 @@ def get_action(state, Q, epsilon):
     Choose action using epsilon-greedy policy
     """
     n_actions = Q.shape[1]
-    if np.random.random() < epsilon:
+    if np.random.random() <= epsilon:
         return np.random.choice(n_actions)
     return np.argmax(Q[state])
