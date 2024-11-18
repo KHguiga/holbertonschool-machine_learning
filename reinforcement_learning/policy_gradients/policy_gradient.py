@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
-""" Policy function """
+"""
+    Policy Gradient
+"""
+
 import numpy as np
 
-# Our policy that maps state to action parameterized by w
-def policy(matrix, weight):
-	z = matrix.dot(weight)
-	exp = np.exp(z)
-	return exp/np.sum(exp)
 
-# Vectorized softmax Jacobian
+def policy(state, weight):
+    """
+    """
+    z = state.dot(weight)
+    z -= np.max(z)
+    exp = np.exp(z)
+
+    return exp / np.sum(exp)
+
+
 def softmax_grad(softmax):
-    s = softmax.reshape(-1,1)
+    """
+    """
+    s = softmax.reshape(-1, 1)
+
     return np.diagflat(s) - np.dot(s, s.T)
 
 
 def policy_gradient(state, weight):
-	probs = policy(state, weight)
-	action = np.random.choice(len(probs[0]), p=probs[0])
-		
-	# Compute gradient and save with reward in memory for our weight updates
-	dsoftmax = softmax_grad(probs)[action,:]
-	dlog = dsoftmax / probs[0, action]
-	grad = state.T.dot(dlog[None, :])
+    """
+    """
+    probs = policy(state, weight)
+    action = np.random.choice(len(probs), p=probs)
+    dsoftmax = softmax_grad(probs)[action, :]
+    dlog = dsoftmax / probs[action]
+    state = state.reshape(-1, 1)
+    grad = state.dot(dlog[None, :])
 
-	return action, grad
+    return action, grad
