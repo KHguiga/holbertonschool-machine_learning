@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import numpy as np
-
 def array(df):
     # Select the last 10 rows of 'High' and 'Close' columns
     last_10_rows = df[['High', 'Close']].tail(10)
