@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 def slice(df):
     # Extract the specified columns
     df_subset = df[['High', 'Low', 'Close', 'Volume_(BTC)']]
