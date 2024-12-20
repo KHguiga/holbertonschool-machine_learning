@@ -12,9 +12,16 @@ def convolutional_GenDiscr():
     """
     def generator():
         """
-        This function returns a generator model.
-        Returns:
-            The generator model.
+            class constructor
+
+        :param generator: generator network
+        :param discriminator: discriminator network
+        :param latent_generator: input (latent vector) for generator
+        :param real_examples: real example for training
+        :param batch_size: hyperparameter, number sample to generate
+        :param disc_iter: number of iter for discriminator in one iter of
+        training
+        :param learning_rate: learning rate for training
         """
         # Input layer: 16 features
         input_layer = layers.Input(shape=(16,))
