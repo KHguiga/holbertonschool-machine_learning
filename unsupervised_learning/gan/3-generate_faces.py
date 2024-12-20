@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-    Define Simple GAN class
-"""
+""" This module defines the convolutional_GenDiscr function. """
 import tensorflow as tf
 from tensorflow import keras
 
@@ -14,16 +12,9 @@ def convolutional_GenDiscr():
     """
     def generator():
         """
-            class constructor
-
-        :param generator: generator network
-        :param discriminator: discriminator network
-        :param latent_generator: input (latent vector) for generator
-        :param real_examples: real example for training
-        :param batch_size: hyperparameter, number sample to generate
-        :param disc_iter: number of iter for discriminator in one iter of
-        training
-        :param learning_rate: learning rate for training
+        This function returns a generator model.
+        Returns:
+            The generator model.
         """
         # Input layer: 16 features
         input_layer = keras.layers.Input(shape=(16,))
