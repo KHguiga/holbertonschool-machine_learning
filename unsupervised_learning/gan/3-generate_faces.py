@@ -4,6 +4,7 @@
 """
 import tensorflow as tf
 from tensorflow import keras
+from keras import Model
 
 
 def convolutional_GenDiscr():
@@ -56,7 +57,7 @@ def convolutional_GenDiscr():
         output_layer = keras.layers.Activation('tanh')(x)
 
         # Return the generator model
-        return keras.Model(inputs=input_layer,
+        return Model(inputs=input_layer,
                      outputs=output_layer, name="generator")
 
     def get_discriminator():
@@ -95,7 +96,7 @@ def convolutional_GenDiscr():
         output_layer = keras.layers.Dense(1)(x)
 
         # Return the discriminator model
-        return keras.Model(inputs=input_layer,
+        return Model(inputs=input_layer,
                      outputs=output_layer, name="discriminator")
 
     return generator(), get_discriminator()
