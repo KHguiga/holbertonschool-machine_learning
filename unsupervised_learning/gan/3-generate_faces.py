@@ -3,7 +3,8 @@
     Define Simple GAN class
 """
 import tensorflow as tf
-from tensorflow.keras import layers, Model
+from tensorflow.keras import layers
+from tensorflow.keras import Model
 
 
 def convolutional_GenDiscr():
