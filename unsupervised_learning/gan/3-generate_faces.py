@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-""" This module defines the convolutional_GenDiscr function. """
+"""
+    Define Simple GAN class
+"""
 import tensorflow as tf
 from tensorflow.keras import layers, Model
 
