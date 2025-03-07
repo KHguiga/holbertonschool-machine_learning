@@ -29,7 +29,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
     for episode in range(episodes):
         E.fill(0)
         state = env.reset()[0]
-        action = get_action(state, Q, epsilon)
+        action = get_action(epsilon, Q[state])
         done = truncated = False
 
         for j in range(max_steps):
@@ -37,7 +37,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             next_state, reward, done, truncated, _ = env.step(action)
 
             # compute next action if game is over, no moves possible
-            next_action = get_action(next_state, Q, epsilon)
+            next_action = get_action(epsilon, Q[next_state])
 
             # Calcul optimisé
             delta = reward + (gamma * Q[next_state, next_action]) \
