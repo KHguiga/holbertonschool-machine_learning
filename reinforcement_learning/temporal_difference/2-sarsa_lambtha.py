@@ -81,7 +81,6 @@ def sarsa_lambda(env, Q, lambda_val, episodes=5000, max_steps=100, alpha=0.1,
                 break
 
         # Exponential decay of epsilon
-        epsilon = max(min_epsilon, initial_epsilon - 
-                      (initial_epsilon - min_epsilon) * (episode / episodes))
+        epsilon = max(min_epsilon, initial_epsilon -(initial_epsilon - min_epsilon) * (episode / episodes))
     
     return Q
