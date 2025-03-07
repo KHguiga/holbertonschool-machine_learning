@@ -23,11 +23,9 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
         E.fill(0)
         state = env.reset()[0]
         action = get_action(state, Q, epsilon)
-        steps = 0
         done = truncated = False
 
-        while not (done or truncated or steps >= max_steps):
-            steps += 1
+        for j in range(max_steps):
 
             next_state, reward, done, truncated, _ = env.step(action)
 
@@ -36,7 +34,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
                 if not (done or truncated) else 0
 
             # Calcul optimisé
-            if not (done or truncated or steps >= max_steps):
+            if not (done or truncated):
                 delta = reward + (gamma * Q[next_state, next_action]) \
                     - Q[state, action]
             else:
@@ -47,7 +45,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             Q += alpha * delta * E
             E[state, action] *= gamma * lambtha
 
-            if not (done or truncated or steps >= max_steps):
+            if not (done or truncated):
                 state, action = next_state, next_action
             else:
                 break
