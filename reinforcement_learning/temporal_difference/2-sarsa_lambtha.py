@@ -33,11 +33,8 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             next_action = get_action(next_state, Q, epsilon)
 
             # Calcul optimisé
-            if not (done or truncated):
-                delta = reward + (gamma * Q[next_state, next_action]) \
-                    - Q[state, action]
-            else:
-                delta = reward - Q[state, action]
+            delta = reward + (gamma * Q[next_state, next_action]) \
+                - Q[state, action]
 
             # update egibility trace and Q table
             E[state, action] += 1            
