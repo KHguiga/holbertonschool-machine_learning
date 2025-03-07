@@ -3,7 +3,6 @@
 Improved version of SARSA(λ)
 """
 import numpy as np
-import gym
 
 def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
                   gamma=0.99, epsilon=1, min_epsilon=0.1,
