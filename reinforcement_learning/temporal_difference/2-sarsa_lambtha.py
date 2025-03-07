@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+"""
+Improved version of SARSA(λ)
+"""
 import numpy as np
 
 def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
@@ -34,7 +38,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             next_state, reward, done, truncated, _ = env.step(action)
 
             # compute next action if game is over, no moves possible
-            next_action = epsilon_greedy(epsilon, Q, next_state)  \
+            next_action = epsilon_greedy(epsilon, Q, next_state) \
                 if (not (done or truncated) and steps <= max_steps) else None
 
             # Calcul optimisé
@@ -44,7 +48,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             else:
                 delta = reward - Q[state, action]
 
-            # update egibility trace and Q table
+            # update eligibility trace and Q table
             E[state, action] += 1
             E[state, action] *= gamma * lambtha
             Q += alpha * delta * E
@@ -60,4 +64,5 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
         # decroissance exponentielle de epsilon
         # epsilon = min_epsilon + (initial_epsilon - min_epsilon) \
         #     * np.exp(-epsilon_decay * episode)
+
     return Q
