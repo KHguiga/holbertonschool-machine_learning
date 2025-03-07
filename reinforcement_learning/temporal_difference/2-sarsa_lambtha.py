@@ -54,7 +54,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
                 break
 
         # Exponential decay of epsilon
-        epsilon = min_epsilon + (max_epsilon - min_epsilon) \
-            * np.exp(-epsilon_decay * episode)
+        epsilon = max(min_epsilon, initial_epsilon -
+                      (initial_epsilon - min_epsilon) * (episode / episodes))
     
     return Q
