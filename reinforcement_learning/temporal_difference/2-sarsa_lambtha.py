@@ -33,17 +33,9 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
 
         for j in range(max_steps):
             next_state, reward, done, truncated, _ = env.step(action)
+            next_action = epsilon_greedy(epsilon, Q, next_state)
 
-            # compute next action if game is over, no moves possible
-            next_action = epsilon_greedy(epsilon, Q, next_state) \
-                if not (done or truncated) else None
-
-            # Calcul optimisé
-            if not (done or truncated):
-                delta = reward + (gamma * Q[next_state, next_action]) \
-                    - Q[state, action]
-            else:
-                delta = reward - Q[state, action]
+            delta = reward + (gamma * Q[next_state, next_action]) - Q[state, action]
 
             # update eligibility trace and Q table
             E[state, action] += 1
