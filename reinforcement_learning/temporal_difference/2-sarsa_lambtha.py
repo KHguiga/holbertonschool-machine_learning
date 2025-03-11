@@ -1,41 +1,54 @@
 #!/usr/bin/env python3
 """
-Task 3
+Improved version of SARSA(λ)
 """
 import numpy as np
 
 
-def sarsa_lambtha(env, Q, lambtha, episodes=5000,
-                  max_steps=100, alpha=0.1, gamma=0.99,
-                  epsilon=1, min_epsilon=0.1, epsilon_decay=0.05):
-    """td lambtha with eligibility trace"""
-    states, actions = Q.shape
-    max_epsilon = epsilon
+def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
+                  gamma=0.99, epsilon=1, min_epsilon=0.1, epsilon_decay=0.05):
+    """
+    Performs SARSA(λ) reinforcement learning algorithm.
+    """
+    # Validation
+    if not (0 <= lambtha <= 1):
+        raise ValueError("lambtha must be between 0 and 1")
 
-    def epsilon_greedy(epsilon, Qs):
-        p = np.random.uniform()
-        if p > epsilon:
-            return np.argmax(Qs)
-        else:
-            return np.random.randint(0, 4)
+    n_states, n_actions = Q.shape
+    initial_epsilon = epsilon
+    E = np.zeros((n_states, n_actions))
 
-    # evaluate episodes
-    for i in range(episodes):
-        E = np.zeros((states, actions))
-        s_prev, _ = env.reset()
-        action_prev = epsilon_greedy(epsilon, Q[s_prev])
+    for episode in range(episodes):
+        E.fill(0)
+        state = env.reset()[0]
+        action = get_action(state, Q, epsilon)
+        steps = 0
+        done = truncated = False
 
-        for j in range(max_steps):
-            s, reward, terminated, truncated, _ = env.step(action_prev)
-            action = epsilon_greedy(epsilon, Q[s])
-            delta = reward + (gamma * Q[s, action]) - Q[s_prev, action_prev]
-            E[s_prev, action_prev] += 1
-            Q = Q + (alpha * delta * E)
-            E = E * gamma * lambtha
-            if terminated or truncated:
-                break
-            s_prev = s
-            action_prev = action
-        exp = np.exp(-epsilon_decay * i)
-        epsilon = min_epsilon + (max_epsilon - min_epsilon) * exp
+        while not (done or truncated) and steps <= max_steps :
+            steps += 1
+
+            next_state, reward, done, truncated, _ = env.step(action)
+
+            # compute next action if game is over, no moves possible
+            next_action = get_action(next_state, Q, epsilon)  \
+    
+            delta = reward + (gamma * Q[next_state, next_action]) - Q[state, action]
+
+            # update egibility trace and Q table
+            E[state, action] += 1
+            E[state, action] *= gamma * lambtha
+            Q += alpha * delta * E
+
+            state, action = next_state, next_action
+        # update epsilon
+        epsilon = min_epsilon + (initial_epsilon - min_epsilon) \
+            * np.exp(-epsilon_decay * episode)
     return Q
+
+
+def get_action(state, Q, epsilon):
+    """Choose action using epsilon-greedy policy"""
+    if np.random.uniform(0, 1) < epsilon:
+        return np.random.randint(0, Q.shape[1])
+    return np.argmax(Q[state, :])
