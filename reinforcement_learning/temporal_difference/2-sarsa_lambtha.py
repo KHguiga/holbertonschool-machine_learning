@@ -52,6 +52,6 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
 
 def get_action(state, Q, epsilon):
     """Choose action using epsilon-greedy policy"""
-    if np.random.uniform(0, 1) < epsilon:
+    if np.random.uniform() <= epsilon:
         return np.random.randint(0, Q.shape[1])
     return np.argmax(Q[state, :])
