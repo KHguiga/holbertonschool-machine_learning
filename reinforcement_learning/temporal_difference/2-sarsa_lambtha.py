@@ -1,57 +1,49 @@
 #!/usr/bin/env python3
 """
-Improved version of SARSA(λ)
+Task 3
 """
 import numpy as np
 
-def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
-                  gamma=0.99, epsilon=1, min_epsilon=0.1, epsilon_decay=0.05):
-    """
-    Performs SARSA(λ) reinforcement learning algorithm.
-    """
-    # Validation
-    if not (0 <= lambtha <= 1):
-        raise ValueError("lambtha must be between 0 and 1")
 
-    n_states, n_actions = Q.shape
-    initial_epsilon = epsilon
-    E = np.zeros((n_states, n_actions))
+def sarsa_lambtha(env, Q, lambtha, episodes=5000,
+                  max_steps=100, alpha=0.1, gamma=0.99,
+                  epsilon=1, min_epsilon=0.1, epsilon_decay=0.05):
+    """td lambtha with eligibility trace"""
+    states, actions = Q.shape
+    max_epsilon = epsilon
 
-    def epsilon_greedy(epsilon, Q, state):
-        """Choisit une action en utilisant la politique epsilon-greedy"""
+    def epsilon_greedy(epsilon, Qs):
         p = np.random.uniform()
         if p > epsilon:
-            return np.argmax(Q[state, :])
+            return np.argmax(Qs)
         else:
-            return np.random.randint(0, Q.shape[1])
+            return np.random.randint(0, 4)
 
-    for episode in range(episodes):
-        E.fill(0)
-        state = env.reset()[0]
-        action = epsilon_greedy(epsilon, Q, state)
-        done = truncated = False
+    # evaluate episodes
+    for i in range(episodes):
+        E = np.zeros((states, actions))
+        s_prev, _ = env.reset()
+        action_prev = epsilon_greedy(epsilon, Q[s_prev])
 
         for j in range(max_steps):
-            next_state, reward, done, truncated, _ = env.step(action)
-            next_action = epsilon_greedy(epsilon, Q, next_state)
-
-            delta = reward + (gamma * Q[next_state, next_action]) - Q[state, action]
-
-            # update eligibility trace and Q table
-            E[state, action] += 1
-            Q += alpha * delta * E
-            E[state, action] *= gamma * lambtha
-
-            if not (done or truncated):
-                state, action = next_state, next_action
-            else:
+            s, reward, terminated, truncated, _ = env.step(action_prev)
+            action = epsilon_greedy(epsilon, Q[s])
+            delta = reward + (gamma * Q[s, action]) - Q[s_prev, action_prev]
+            E[s_prev, action_prev] += 1
+            Q = Q + (alpha * delta * E)
+            E = E * gamma * lambtha
+            if terminated or truncated:
                 break
-
-        # Décroissance exponentielle de epsilon
-        epsilon = min_epsilon + (initial_epsilon - min_epsilon) \
-            * np.exp(-epsilon_decay * episode)
-        # Décroissance linéaire de epsilon (commentée)
-        # epsilon = max(min_epsilon, initial_epsilon -
-        #               (initial_epsilon - min_epsilon) * (episode / episodes))
-
+            s_prev = s
+            action_prev = action
+        exp = np.exp(-epsilon_decay * i)
+        epsilon = min_epsilon + (max_epsilon - min_epsilon) * exp
     return Q
+def get_action(state, Q, epsilon):
+    """
+    Choose action using epsilon-greedy policy
+    """
+    n_actions = Q.shape[1]
+    if np.random.rand() <= epsilon:
+        return np.random.randint(n_actions)
+    return np.argmax(Q[state])
