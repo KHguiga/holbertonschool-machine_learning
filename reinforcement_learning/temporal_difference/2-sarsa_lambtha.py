@@ -31,7 +31,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             next_state, reward, done, truncated, _ = env.step(action)
 
             # compute next action if game is over, no moves possible
-            next_action = get_action(next_state, Q, epsilon)  \
+            next_action = get_action(next_state, Q, epsilon)
     
             delta = reward + (gamma * Q[next_state, next_action]) - Q[state, action]
 
@@ -39,6 +39,9 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             E[state, action] += 1
             Q += alpha * delta * E
             E[state, action] *= gamma * lambtha
+
+            if done or truncated:
+                break
 
             state, action = next_state, next_action
         # update epsilon
