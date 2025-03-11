@@ -39,11 +39,3 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000,
         exp = np.exp(-epsilon_decay * i)
         epsilon = min_epsilon + (max_epsilon - min_epsilon) * exp
     return Q
-def get_action(state, Q, epsilon):
-    """
-    Choose action using epsilon-greedy policy
-    """
-    n_actions = Q.shape[1]
-    if np.random.rand() <= epsilon:
-        return np.random.randint(n_actions)
-    return np.argmax(Q[state])
