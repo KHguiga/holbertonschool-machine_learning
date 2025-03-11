@@ -25,7 +25,7 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
         steps = 0
         done = truncated = False
 
-        while not (done or truncated) and steps < max_steps :
+        while steps < max_steps :
             steps += 1
 
             next_state, reward, done, truncated, _ = env.step(action)
