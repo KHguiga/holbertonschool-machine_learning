@@ -25,7 +25,8 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
         steps = 0
         done = truncated = False
 
-        for j in range(max_steps):
+        while not (done or truncated) and steps <= max_steps :
+            steps += 1
 
             next_state, reward, done, truncated, _ = env.step(action)
 
@@ -39,9 +40,6 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
             Q += alpha * delta * E
             E[state, action] *= gamma * lambtha
 
-            if done or truncated:
-                break
-
             state, action = next_state, next_action
         # update epsilon
         epsilon = min_epsilon + (initial_epsilon - min_epsilon) \
@@ -51,6 +49,6 @@ def sarsa_lambtha(env, Q, lambtha, episodes=5000, max_steps=100, alpha=0.1,
 
 def get_action(state, Q, epsilon):
     """Choose action using epsilon-greedy policy"""
-    if np.random.uniform() <= epsilon:
+    if np.random.uniform(0, 1) < epsilon:
         return np.random.randint(0, Q.shape[1])
     return np.argmax(Q[state, :])
